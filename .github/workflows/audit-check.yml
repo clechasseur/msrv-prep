@@ -1,0 +1,41 @@
+name: Security audit
+
+on:
+  # TODO re-enable once project is set up properly
+  #push:
+  #schedule:
+  #  - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  audit-check:
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Run security audit
+        # Note: the action below is a temporary fork of rustsec/audit-check; it could be
+        # replaced if, at some point, rustsec/audit-check is updated to use Node 20.
+        uses: clechasseur/rustsec-audit-check@b5ade62a8d38826bb50ca4b8b9bc2a8a97f0d44d
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if we need to audit MSRV manifest
+        id: check_msrv_manifest
+        uses: andstor/file-existence-action@076e0072799f4942c8bc574a82233e1e4d13e9d6
+        with:
+          files: "Cargo.toml.msrv"
+
+      - name: Install MSRV manifest
+        if: ${{ steps.check_msrv_manifest.outputs.files_exists == 'true' }}
+        run: cp Cargo.toml.msrv Cargo.toml
+
+      - name: Run security audit for MSRV manifest
+        if: ${{ steps.check_msrv_manifest.outputs.files_exists == 'true' }}
+        uses: clechasseur/rustsec-audit-check@b5ade62a8d38826bb50ca4b8b9bc2a8a97f0d44d
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,248 @@
+name: CI
+
+on:
+  # TODO re-enable once project is set up properly
+  #push:
+  workflow_dispatch:
+
+env:
+  CI: 1
+
+jobs:
+  clippy:
+    name: Clippy validation${{ matrix.all-features && ' with all features' || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        all-features: [ false ] # TODO if your crate has optional features, add 'true' to this list
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Install Rust with clippy
+        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
+        with:
+          toolchain: stable
+          components: clippy
+          cache: false
+
+      - name: Run clippy
+        uses: clechasseur/rs-clippy-check@c624f914a0031ab286c106776f889357ba7e799a
+        with:
+          args: --workspace --all-targets ${{ matrix.all-features && '--all-features' || '' }} -- -D warnings
+
+  fmt:
+    name: Rustfmt check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Install Rust nightly with rustfmt
+        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
+        with:
+          toolchain: nightly
+          components: rustfmt
+          cache: false
+
+      - name: Run Rustfmt
+        uses: clechasseur/rs-fmt-check@e4f3eb51a38452b7963c14758a8f0f9ad52a84d4
+        with:
+          args: --all
+
+  msrv-check:
+    name: MSRV check for Rust ${{ matrix.toolchain }} on ${{ matrix.os }}${{ matrix.all-features && ' with all features' || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [ 1.60.0 ] # TODO: change for your minimum supported Rust version
+        os: [ ubuntu, macos, windows ]
+        all-features: [ false ] # TODO if your crate has optional features, add 'true' to this list
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Install Rust nightly toolchain
+        if: ${{ matrix.toolchain != 'nightly' }}
+        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
+        with:
+          toolchain: nightly
+          cache: false
+
+      - name: Install Rust toolchain ${{ matrix.toolchain }}
+        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          cache: false
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+        with:
+          prefix-key: v4-rust
+          key: all-features-${{ matrix.all-features }}-msrv-cargo-files-${{ hashFiles('**/Cargo.*.msrv') }}
+
+      - name: Install just, cargo-hack and cargo-minimal-versions
+        uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
+        with:
+          tool: just,cargo-hack,cargo-minimal-versions
+
+      - name: Run checks using cargo-minimal-versions
+        run: just all_features=${{ matrix.all-features }} check-minimal
+
+  build:
+    name: Build for Rust ${{ matrix.toolchain }}${{ matrix.experimental && ' (experimental)' || '' }} on ${{ matrix.os }}${{ matrix.ignore-lock && ' without Cargo.lock' || '' }}${{ matrix.all-features && ' with all features' || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [ 1.68.2, stable, beta, nightly ] # TODO: change 1.68.2 for your minimum supported Rust version
+        os: [ ubuntu, macos, windows ]
+        ignore-lock: [ false, true ]
+        all-features: [ false ] # TODO if your crate has optional features, add 'true' to this list
+        include:
+          - experimental: false
+          - toolchain: beta
+            experimental: true
+          - toolchain: nightly
+            experimental: true
+    runs-on: ${{ matrix.os }}-latest
+    continue-on-error: ${{ matrix.experimental }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Remove Cargo.lock
+        if: ${{ matrix.ignore-lock }}
+        run: rm Cargo.lock
+
+      - name: Install Rust toolchain ${{ matrix.toolchain }}
+        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          cache: false
+
+      - name: Rust Cache
+        if: ${{ !matrix.experimental }}
+        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+        with:
+          prefix-key: v1-rust
+          key: ignore-lock-${{ matrix.ignore-lock }}-all-features-${{ matrix.all-features }}
+
+      - name: Install just
+        uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
+        with:
+          tool: just
+
+      - name: Run checks
+        run: just all_features=${{ matrix.all-features }} check
+
+      - name: Run tests
+        run: just all_features=${{ matrix.all-features }} test
+
+  tarpaulin:
+    name: Code coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
+        with:
+          toolchain: stable
+          cache: false
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+        with:
+          cache-targets: false
+
+      - name: Install cargo-tarpaulin
+        uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
+        with:
+          tool: cargo-tarpaulin
+
+      - name: Run cargo-tarpaulin
+        uses: clechasseur/rs-cargo@7f70e375af32a065d31856c21fd53b638d38e057
+        with:
+          command: tarpaulin
+
+      - name: Upload code coverage results to codecov.io
+        uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@5d5d22a31266ced268874388b861e4b58bb5c2f3
+        with:
+          name: code-coverage-report
+          path: |
+            cobertura.xml
+            tarpaulin-report.html
+
+  doc:
+    name: Rustdoc check for Rust ${{ matrix.toolchain }}${{ matrix.experimental && ' (experimental)' || '' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [ stable, nightly ]
+        include:
+          - experimental: false
+          - toolchain: nightly
+            experimental: true
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Install Rust toolchain ${{ matrix.toolchain }}
+        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          cache: false
+
+      - name: Rust Cache
+        if: ${{ !matrix.experimental }}
+        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+        with:
+          cache-targets: false
+
+      - name: Install just
+        uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
+        with:
+          tool: just
+
+      - name: Generate doc using rustdoc
+        run: just doc
+
+  publish-dry-run:
+    name: Publish dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Install Rust
+        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
+        with:
+          toolchain: stable
+          cache: false
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
+        with:
+          cache-targets: false
+
+      - name: Install just
+        uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
+        with:
+          tool: just
+
+      - name: Perform publish dry-run
+        uses: clechasseur/rs-cargo@7f70e375af32a065d31856c21fd53b638d38e057
+        with:
+          command: publish
+          args: --dry-run
