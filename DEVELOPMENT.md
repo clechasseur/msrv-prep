@@ -96,4 +96,4 @@ Make sure any new public symbol is documented before submitting a PR.
 
 ## Questions?
 
-If any part of this documentation is unclear, please open a [new issue](https://github.com/clechasseur/rust-template/issues/new/choose) so it can be fixed.
+If any part of this documentation is unclear, please open a [new issue](https://github.com/clechasseur/msrv-prep/issues/new/choose) so it can be fixed.

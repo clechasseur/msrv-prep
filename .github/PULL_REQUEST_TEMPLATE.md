@@ -2,9 +2,9 @@
 
 Make sure all of this is true before submitting your PR:
 
-- [ ] I have read the [contributing guidelines](https://github.com/clechasseur/rust-template/blob/main/CONTRIBUTING.md) and validated that this PR will be accepted
-- [ ] I have made sure all checks will pass (see [DEVELOPMENT.md](https://github.com/clechasseur/rust-template/blob/main/DEVELOPMENT.md) for more info on running checks locally)
-- [ ] My contribution follows the [code of conduct](https://github.com/clechasseur/rust-template/blob/main/CODE_OF_CONDUCT.md)
+- [ ] I have read the [contributing guidelines](https://github.com/clechasseur/msrv-prep/blob/main/CONTRIBUTING.md) and validated that this PR will be accepted
+- [ ] I have made sure all checks will pass (see [DEVELOPMENT.md](https://github.com/clechasseur/msrv-prep/blob/main/DEVELOPMENT.md) for more info on running checks locally)
+- [ ] My contribution follows the [code of conduct](https://github.com/clechasseur/msrv-prep/blob/main/CODE_OF_CONDUCT.md)
 
 ### PR description
 

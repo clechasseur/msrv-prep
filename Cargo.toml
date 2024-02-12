@@ -1,0 +1,35 @@
+[workspace]
+members = [ "bins/cargo-msrv-prep" ]
+
+[workspace.package]
+authors = [ "Charles Lechasseur <shiftingbeard@gmx.com>" ]
+edition = "2021"
+
+readme = "README.md"
+license = "MIT"
+
+keywords = [ "cli", "cargo", "subcommand", "testing" ]
+categories = [ "command-line-utilities", "development-tools::cargo-plugins", "development-tools::testing" ]
+
+[workspace.dependencies]
+msrv-prep-lib = { path = "." }
+
+[package]
+name = "msrv-prep-lib"
+version = "0.1.0"
+authors.workspace = true
+edition.workspace = true
+
+readme.workspace = true
+license.workspace = true
+
+description = "Common code used by cargo-msrv-prep"
+
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+toml_edit = "0.22.4"
+
+[build-dependencies]
+rustc_version = "0.4.0"

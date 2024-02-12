@@ -5,7 +5,8 @@ updates:
     schedule:
       interval: "daily"
 
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule:
-      interval: "weekly"
+# TODO if this is required, re-enable; otherwise remove
+#  - package-ecosystem: "github-actions"
+#    directory: "/"
+#    schedule:
+#      interval: "weekly"

@@ -1,8 +1,7 @@
 name: CI
 
 on:
-  # TODO re-enable once project is set up properly
-  #push:
+  push:
   workflow_dispatch:
 
 env:
@@ -14,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        all-features: [ false ] # TODO if your crate has optional features, add 'true' to this list
+        all-features: [ false ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -56,9 +55,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        toolchain: [ 1.60.0 ] # TODO: change for your minimum supported Rust version
+        toolchain: [ 1.56.1 ]
         os: [ ubuntu, macos, windows ]
-        all-features: [ false ] # TODO if your crate has optional features, add 'true' to this list
+        all-features: [ false ]
     runs-on: ${{ matrix.os }}-latest
     steps:
       - name: Checkout code
@@ -96,10 +95,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        toolchain: [ 1.68.2, stable, beta, nightly ] # TODO: change 1.68.2 for your minimum supported Rust version
+        toolchain: [ 1.56.1, stable, beta, nightly ]
         os: [ ubuntu, macos, windows ]
         ignore-lock: [ false, true ]
-        all-features: [ false ] # TODO if your crate has optional features, add 'true' to this list
+        all-features: [ false ]
         include:
           - experimental: false
           - toolchain: beta
