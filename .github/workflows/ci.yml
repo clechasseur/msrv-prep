@@ -55,7 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        toolchain: [ 1.56.1 ]
+        toolchain: [ 1.69.0 ]
         os: [ ubuntu, macos, windows ]
         all-features: [ false ]
     runs-on: ${{ matrix.os }}-latest
@@ -95,7 +95,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        toolchain: [ 1.56.1, stable, beta, nightly ]
+        toolchain: [ 1.69.0, stable, beta, nightly ]
         os: [ ubuntu, macos, windows ]
         ignore-lock: [ false, true ]
         all-features: [ false ]

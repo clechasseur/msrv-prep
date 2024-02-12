@@ -51,23 +51,13 @@ doc $RUSTDOCFLAGS="-D warnings":
 doc-coverage $RUSTDOCFLAGS="-Z unstable-options --show-coverage":
     cargo +nightly doc --no-deps --workspace {{all_features_flag}} {{message_format_flag}}
 
-backup-manifest manifest_bak="Cargo.toml.bak" lockfile_bak="Cargo.lock.bak":
-    {{ if path_exists(manifest_bak) == "true" { "rm " + manifest_bak } else { "" } }}
+backup-manifest lockfile_bak="Cargo.lock.bak":
     {{ if path_exists(lockfile_bak) == "true" { "rm " + lockfile_bak } else { "" } }}
-    {{ if path_exists("Cargo.toml") == "true" { "mv Cargo.toml " + manifest_bak } else { "" } }}
     {{ if path_exists("Cargo.lock") == "true" { "mv Cargo.lock " + lockfile_bak } else { "" } }}
 
-restore-manifest manifest_bak="Cargo.toml.bak" lockfile_bak="Cargo.lock.bak":
-    {{ if path_exists("Cargo.toml") == "true" { "rm Cargo.toml" } else { "" } }}
+restore-manifest lockfile_bak="Cargo.lock.bak":
     {{ if path_exists("Cargo.lock") == "true" { "rm Cargo.lock" } else { "" } }}
-    {{ if path_exists(manifest_bak) == "true" { "mv " + manifest_bak + " Cargo.toml" } else { "" } }}
     {{ if path_exists(lockfile_bak) == "true" { "mv " + lockfile_bak + " Cargo.lock" } else { "" } }}
-
-apply-msrv:
-    cp Cargo.toml.msrv Cargo.toml
-
-save-msrv:
-    cp Cargo.toml Cargo.toml.msrv
 
 minimize:
     cargo hack --remove-dev-deps --workspace
@@ -76,10 +66,13 @@ minimize:
 check-minimal-only:
     {{cargo}} minimal-versions check --workspace --lib --bins {{all_features_flag}} {{message_format_flag}}
 
-check-minimal: backup-manifest apply-msrv check-minimal-only restore-manifest
+check-minimal: backup-manifest check-minimal-only restore-manifest
 
-msrv: (backup-manifest "Cargo.toml.bak.msrv" "Cargo.lock.bak.msrv") apply-msrv && (restore-manifest "Cargo.toml.bak.msrv" "Cargo.lock.bak.msrv")
+msrv-minimal: (backup-manifest "Cargo.lock.bak.msrv") && (restore-manifest "Cargo.lock.bak.msrv")
     cargo msrv -- just check-minimal
+
+msrv:
+    cargo msrv -- just check
 
 test-package:
     {{cargo}} publish --dry-run

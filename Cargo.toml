@@ -3,7 +3,6 @@ members = [ "bins/cargo-msrv-prep" ]
 
 [workspace.package]
 authors = [ "Charles Lechasseur <shiftingbeard@gmx.com>" ]
-edition = "2021"
 
 readme = "README.md"
 license = "MIT"
@@ -18,7 +17,7 @@ msrv-prep-lib = { path = "." }
 name = "msrv-prep-lib"
 version = "0.1.0"
 authors.workspace = true
-edition.workspace = true
+edition = "2021"
 
 readme.workspace = true
 license.workspace = true
