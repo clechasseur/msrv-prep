@@ -1,34 +1,33 @@
-[workspace]
-members = [ "bins/cargo-msrv-prep" ]
-
-[workspace.package]
+[package]
+name = "cargo-msrv-prep"
+version = "0.1.0"
 authors = [ "Charles Lechasseur <shiftingbeard@gmx.com>" ]
+edition = "2021"
 
 readme = "README.md"
 license = "MIT"
 
+homepage = "https://github.com/clechasseur/msrv-prep#readme"
+repository = "https://github.com/clechasseur/msrv-prep"
+documentation = "https://docs.rs/cargo-msrv-prep"
+
+description = "Cargo subcommand useful to prepare for determining/verifying a crate's MSRV"
+
 keywords = [ "cli", "cargo", "subcommand", "testing" ]
 categories = [ "command-line-utilities", "development-tools::cargo-plugins", "development-tools::testing" ]
 
-[workspace.dependencies]
-msrv-prep-lib = { path = "." }
-
-[package]
-name = "msrv-prep-lib"
-version = "0.1.0"
-authors.workspace = true
-edition = "2021"
-
-readme.workspace = true
-license.workspace = true
-
-description = "Common code used by cargo-msrv-prep"
-
-keywords.workspace = true
-categories.workspace = true
-
 [dependencies]
-toml_edit = "0.22.4"
+cargo_metadata = "0.18.1"
+clap = { version = "4.5.1", features = ["derive"] }
+clap-cargo = { version = "0.14.0", features = ["cargo_metadata"] }
+clap-verbosity-flag = "2.2.0"
+env_logger = "0.11.2"
+log = "0.4.20"
+thiserror = "1.0.57"
+toml_edit = "0.22.6"
+
+[dev-dependencies]
+indoc = "2.0.4"
 
 [build-dependencies]
 rustc_version = "0.4.0"
