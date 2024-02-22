@@ -1,0 +1,15 @@
+[package]
+name = "test-workspace-member-b"
+version = "0.1.0"
+authors = [ "Charles Lechasseur <shiftingbeard@gmx.com>" ]
+edition = "2021"
+rust-version = "1.70.0"
+
+[dependencies]
+serde_json = "1.0.114"
+
+[dev-dependencies]
+wiremock = "0.6.0"
+
+[build-dependencies]
+cargo_metadata = "0.18.1"

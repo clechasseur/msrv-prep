@@ -55,8 +55,11 @@ use std::fs;
 use cargo_msrv_prep::common_args::CommonArgs;
 use cargo_msrv_prep::metadata::Metadata;
 use cargo_msrv_prep::result::IoErrorContext;
-use cargo_msrv_prep::{backup_manifest, maybe_merge_msrv_dependencies, remove_rust_version};
-use clap::{Args, Parser};
+use cargo_msrv_prep::{
+    backup_manifest, maybe_merge_msrv_dependencies, remove_rust_version, RUST_VERSION_SPECIFIER,
+};
+use clap::{crate_name, Args, Parser};
+use log::{debug, info, log_enabled, trace, Level};
 use toml_edit::Document;
 
 fn main() -> cargo_msrv_prep::Result<()> {
@@ -66,7 +69,12 @@ fn main() -> cargo_msrv_prep::Result<()> {
         .filter_level(args.common.verbose.log_level_filter())
         .init();
 
-    prep_for_msrv(&args)
+    info!("{} started", crate_name!());
+
+    prep_for_msrv(&args)?;
+
+    info!("{} finished", crate_name!());
+    Ok(())
 }
 
 /// Default name of TOML file containing pinned crates used when determining/verifying MSRV.
@@ -98,29 +106,96 @@ struct MsrvPrepArgs {
     /// Name of TOML file containing pinned dependencies
     #[arg(long, default_value = DEFAULT_MSRV_PINS_FILE_NAME)]
     pub pins_file_name: String,
+
+    /// Skip removing 'rust-version' field
+    #[arg(long, default_value_t = false)]
+    pub no_remove_rust_version: bool,
+
+    /// Skip merging pinned MSRV dependencies
+    #[arg(long, default_value_t = false)]
+    pub no_merge_pinned_dependencies: bool,
+
+    /// Overwrite existing manifest backup files
+    #[arg(short, long, default_value_t = false)]
+    pub force: bool,
+
+    /// Determine if preparation is required without persisting resulting manifests
+    ///
+    /// To see result, increase verbosity to at least INFO (e.g. `-vv`)
+    #[arg(short = 'n', long, default_value_t = false)]
+    pub dry_run: bool,
 }
 
 fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
+    trace!("Entering `prep_for_msrv` (args: {:?})", args);
+
     let metadata: Metadata = (&args.common).try_into()?;
+    debug!("Workspace root: {}", metadata.cargo_metadata.workspace_root);
+    if log_enabled!(Level::Debug) {
+        let selected_package_names = metadata
+            .selected_packages
+            .iter()
+            .map(|p| p.name.as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        debug!("Selected packages: {}", selected_package_names);
+    }
 
     for package in &metadata.selected_packages {
+        info!("Preparing manifest '{}' (at '{}')", package.name, package.manifest_path);
+
         let manifest_text = fs::read_to_string(&package.manifest_path)
             .with_io_context(|| format!("reading manifest of package {}", package.name))?;
         let mut manifest = manifest_text.parse::<Document>()?;
-        let changed = remove_rust_version(&mut manifest)
-            || maybe_merge_msrv_dependencies(
+
+        let rust_version_removed = if !args.no_remove_rust_version {
+            let removed = remove_rust_version(&mut manifest);
+
+            debug!("'{}' field removed: {}", RUST_VERSION_SPECIFIER, removed);
+            removed
+        } else {
+            info!("Skipping removal of '{}' field", RUST_VERSION_SPECIFIER);
+            false
+        };
+
+        let msrv_dependencies_merged = if !args.no_merge_pinned_dependencies {
+            let merged = maybe_merge_msrv_dependencies(
                 &mut manifest,
                 &package.manifest_path,
                 &args.pins_file_name,
             )?;
 
-        if changed {
-            backup_manifest(&package.manifest_path, &args.common.manifest_backup_suffix)?;
-            fs::write(&package.manifest_path, &manifest.to_string()).with_io_context(|| {
-                format!("saving updated manifest content to '{}'", package.manifest_path)
-            })?;
+            debug!("Pinned MSRV dependencies merged: {}", merged);
+            merged
+        } else {
+            info!("Skipping merging of pinned MSRV dependencies");
+            false
+        };
+
+        if rust_version_removed || msrv_dependencies_merged {
+            if !args.dry_run {
+                info!("Manifest for '{}' changed after preparation; persisting", package.name);
+
+                backup_manifest(
+                    &package.manifest_path,
+                    &args.common.manifest_backup_suffix,
+                    args.force,
+                )?;
+                fs::write(&package.manifest_path, &manifest.to_string()).with_io_context(|| {
+                    format!("saving updated manifest content to '{}'", package.manifest_path)
+                })?;
+            } else {
+                info!(
+                    "Manifest for '{}' changed after preparation; not persisting (dry-run mode)",
+                    package.name
+                );
+            }
+        } else {
+            info!("Manifest for '{}' not changed after preparation; skipping", package.name);
         }
     }
 
+    trace!("Exiting `prep_for_msrv`");
     Ok(())
 }
