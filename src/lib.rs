@@ -25,9 +25,6 @@ use toml_edit::{Document, Item, Table};
 use crate::detail::{merge_msrv_dependencies, PACKAGE_SECTION_NAME, RUST_VERSION_SPECIFIER};
 use crate::result::IoErrorContext;
 
-/// Default name of TOML file containing pinned crates used when determining/verifying MSRV.
-pub const DEFAULT_MSRV_PINS_FILE_NAME: &str = "msrv-pins.toml";
-
 /// Default suffix used to backup manifest files before determining/verifying MSRV.
 pub const DEFAULT_MANIFEST_BACKUP_SUFFIX: &str = ".msrv-prep.bak";
 

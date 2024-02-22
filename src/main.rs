@@ -63,11 +63,14 @@ fn main() -> cargo_msrv_prep::Result<()> {
     let Cli::MsrvPrep(args) = Cli::parse();
 
     env_logger::Builder::new()
-        .filter_level(args.common_args.verbose.log_level_filter())
+        .filter_level(args.common.verbose.log_level_filter())
         .init();
 
-    prep_for_msrv(&args.common_args)
+    prep_for_msrv(&args)
 }
+
+/// Default name of TOML file containing pinned crates used when determining/verifying MSRV.
+const DEFAULT_MSRV_PINS_FILE_NAME: &str = "msrv-pins.toml";
 
 #[derive(Debug, Parser)]
 #[command(name = "cargo", bin_name = "cargo")]
@@ -90,11 +93,15 @@ enum Cli {
 )]
 struct MsrvPrepArgs {
     #[command(flatten)]
-    common_args: CommonArgs,
+    common: CommonArgs,
+
+    /// Name of TOML file containing pinned dependencies
+    #[arg(long, default_value = DEFAULT_MSRV_PINS_FILE_NAME)]
+    pub pins_file_name: String,
 }
 
-fn prep_for_msrv(args: &CommonArgs) -> cargo_msrv_prep::Result<()> {
-    let metadata: Metadata = args.try_into()?;
+fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
+    let metadata: Metadata = (&args.common).try_into()?;
 
     for package in &metadata.selected_packages {
         let manifest_text = fs::read_to_string(&package.manifest_path)
@@ -108,7 +115,7 @@ fn prep_for_msrv(args: &CommonArgs) -> cargo_msrv_prep::Result<()> {
             )?;
 
         if changed {
-            backup_manifest(&package.manifest_path, &args.manifest_backup_suffix)?;
+            backup_manifest(&package.manifest_path, &args.common.manifest_backup_suffix)?;
             fs::write(&package.manifest_path, &manifest.to_string()).with_io_context(|| {
                 format!("saving updated manifest content to '{}'", package.manifest_path)
             })?;
