@@ -1,10 +1,24 @@
+use std::fs;
 use std::path::PathBuf;
 
 use assert_fs::fixture::PathCopy;
 use assert_fs::TempDir;
 use predicates::path::eq_file;
-use predicates::Predicate;
 use predicates::str::PredicateStrExt;
+use predicates::Predicate;
+
+fn backup_manifests(path: PathBuf) {
+    if path.join("Cargo.toml").is_file() {
+        fs::copy(path.join("Cargo.toml"), path.join("Cargo.toml.bak")).unwrap();
+    }
+
+    for entry in fs::read_dir(path).unwrap() {
+        let entry = entry.unwrap();
+        if entry.file_type().unwrap().is_dir() {
+            backup_manifests(entry.path());
+        }
+    }
+}
 
 fn fork_project(project_name: &str) -> TempDir {
     let temp = TempDir::new().unwrap();
@@ -13,6 +27,8 @@ fn fork_project(project_name: &str) -> TempDir {
         .iter()
         .collect();
     temp.copy_from(project_path, &["*.rs", "*.toml"]).unwrap();
+
+    backup_manifests(temp.path().to_path_buf());
 
     temp
 }
@@ -40,8 +56,9 @@ mod simple_project_tests {
 
         assert.success();
 
-        temp.child("Cargo.toml")
-            .assert(eq_text_file(temp.child("expected").child("all.toml").path()));
+        temp.child("expected")
+            .child("all.toml")
+            .assert(eq_text_file(temp.child("Cargo.toml").path()));
     }
 
     #[test]
@@ -57,11 +74,9 @@ mod simple_project_tests {
 
         assert.success();
 
-        temp.child("Cargo.toml").assert(eq_text_file(
-            temp.child("expected")
-                .child("no-remove-rust-version.toml")
-                .path(),
-        ));
+        temp.child("expected")
+            .child("no-remove-rust-version.toml")
+            .assert(eq_text_file(temp.child("Cargo.toml").path()));
     }
 
     #[test]
@@ -77,11 +92,9 @@ mod simple_project_tests {
 
         assert.success();
 
-        temp.child("Cargo.toml").assert(eq_text_file(
-            temp.child("expected")
-                .child("no-merge-pinned-dependencies.toml")
-                .path(),
-        ));
+        temp.child("expected")
+            .child("no-merge-pinned-dependencies.toml")
+            .assert(eq_text_file(temp.child("Cargo.toml").path()));
     }
 }
 
@@ -98,23 +111,19 @@ mod workspace_tests {
         C: IntoIterator<Item = &'a str>,
         U: IntoIterator<Item = &'b str>,
     {
-        let project_path: PathBuf = [env!("CARGO_MANIFEST_DIR"), "resources", "tests", "workspace"]
-            .iter()
-            .collect();
-
         for package in changed {
             temp.child(package)
-                .child("Cargo.toml")
-                .assert(eq_text_file(temp.child(package).child("expected.toml").path()));
+                .child("expected.toml")
+                .assert(eq_text_file(temp.child(package).child("Cargo.toml").path()));
             temp.child(package)
-                .child("Cargo.toml.msrv-prep.bak")
-                .assert(eq_text_file(project_path.join(package).join("Cargo.toml")));
+                .child("Cargo.toml.bak")
+                .assert(eq_text_file(temp.child(package).child("Cargo.toml.msrv-prep.bak").path()));
         }
 
         for package in unchanged {
             temp.child(package)
-                .child("Cargo.toml")
-                .assert(eq_text_file(project_path.join(package).join("Cargo.toml")));
+                .child("Cargo.toml.bak")
+                .assert(eq_text_file(temp.child(package).child("Cargo.toml").path()));
             temp.child(package)
                 .child("Cargo.toml.msrv-prep.bak")
                 .assert(missing());
