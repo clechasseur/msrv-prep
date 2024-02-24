@@ -5,22 +5,23 @@ members = [
     "member_c"
 ]
 
+[workspace.dependencies]
+either = "1.10.0"
+mockall = "0.12.1"
+rustc_version = "0.4.0"
+
 [package]
 name = "test-workspace"
 version = "0.1.0"
 authors = [ "Charles Lechasseur <shiftingbeard@gmx.com>" ]
 edition = "2021"
+rust-version = "1.70.0"
 
 [dependencies]
-either = "1.10.0"
-serde = "1.0.197"
+either.workspace = true
 
 [dev-dependencies]
-mockall = "0.12.1"
+mockall.workspace = true
 
 [build-dependencies]
-rustc_version = "0.4.0"
-libgit2-sys = "0.16.2+1.7.2"
-
-[target.'cfg(windows)'.dependencies]
-winapi = "0.3.9"
+rustc_version.workspace = true
