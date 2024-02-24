@@ -2,6 +2,9 @@ use std::path::PathBuf;
 
 use assert_fs::fixture::PathCopy;
 use assert_fs::TempDir;
+use predicates::path::eq_file;
+use predicates::Predicate;
+use predicates::str::PredicateStrExt;
 
 fn fork_project(project_name: &str) -> TempDir {
     let temp = TempDir::new().unwrap();
@@ -14,17 +17,23 @@ fn fork_project(project_name: &str) -> TempDir {
     temp
 }
 
+fn eq_text_file<P>(path: P) -> impl Predicate<str>
+where
+    P: Into<PathBuf>,
+{
+    eq_file(path).utf8().unwrap().normalize()
+}
+
 mod simple_project_tests {
     use assert_cmd::{crate_name, Command};
     use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
-    use predicates::path::eq_file;
 
     use super::*;
 
     #[test]
     fn all() {
-        let temp = fork_project("simple_project");
+        let temp = fork_project("simple_project").into_persistent();
 
         let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
         let assert = cmd.current_dir(temp.path()).arg("msrv-prep").assert();
@@ -32,7 +41,7 @@ mod simple_project_tests {
         assert.success();
 
         temp.child("Cargo.toml")
-            .assert(eq_file(temp.child("expected").child("all.toml").path()));
+            .assert(eq_text_file(temp.child("expected").child("all.toml").path()));
     }
 
     #[test]
@@ -48,7 +57,7 @@ mod simple_project_tests {
 
         assert.success();
 
-        temp.child("Cargo.toml").assert(eq_file(
+        temp.child("Cargo.toml").assert(eq_text_file(
             temp.child("expected")
                 .child("no-remove-rust-version.toml")
                 .path(),
@@ -68,7 +77,7 @@ mod simple_project_tests {
 
         assert.success();
 
-        temp.child("Cargo.toml").assert(eq_file(
+        temp.child("Cargo.toml").assert(eq_text_file(
             temp.child("expected")
                 .child("no-merge-pinned-dependencies.toml")
                 .path(),
@@ -80,7 +89,7 @@ mod workspace_tests {
     use assert_cmd::{crate_name, Command};
     use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
-    use predicates::path::{eq_file, missing};
+    use predicates::path::missing;
 
     use super::*;
 
@@ -96,16 +105,16 @@ mod workspace_tests {
         for package in changed {
             temp.child(package)
                 .child("Cargo.toml")
-                .assert(eq_file(temp.child(package).child("expected.toml").path()));
+                .assert(eq_text_file(temp.child(package).child("expected.toml").path()));
             temp.child(package)
                 .child("Cargo.toml.msrv-prep.bak")
-                .assert(eq_file(project_path.join(package).join("Cargo.toml")));
+                .assert(eq_text_file(project_path.join(package).join("Cargo.toml")));
         }
 
         for package in unchanged {
             temp.child(package)
                 .child("Cargo.toml")
-                .assert(eq_file(project_path.join(package).join("Cargo.toml")));
+                .assert(eq_text_file(project_path.join(package).join("Cargo.toml")));
             temp.child(package)
                 .child("Cargo.toml.msrv-prep.bak")
                 .assert(missing());
