@@ -100,9 +100,8 @@ mod tests {
         "#}
         .parse::<Document>()
         .unwrap();
-        let source_table = &source["table"];
 
-        merge_toml(destination.entry("table"), source_table);
+        merge_toml(destination.entry("table"), &source["table"]);
 
         let expected = indoc! {r#"
             [table]
@@ -131,9 +130,8 @@ mod tests {
         "#}
         .parse::<Document>()
         .unwrap();
-        let source_array = &source["tables"];
 
-        merge_toml(destination.entry("tables"), source_array);
+        merge_toml(destination.entry("tables"), &source["tables"]);
 
         let expected = indoc! {r#"
             [[tables]]
@@ -151,25 +149,40 @@ mod tests {
     fn test_replacement() {
         let mut destination = indoc! {r#"
             table = "what"
+            tables = "how"
+            will_be_overwritten = "alas, poor Yorick"
+            will_be_removed = "salut"
         "#}
         .parse::<Document>()
         .unwrap();
 
         let source = indoc! {r#"
+            will_be_overwritten = "hello, world!"
+
             [table]
             life = 42
             hangar = "23"
+
+            [[tables]]
+            always = [7, 11]
         "#}
         .parse::<Document>()
         .unwrap();
-        let source_table = &source["table"];
 
-        merge_toml(destination.entry("table"), source_table);
+        merge_toml(destination.entry("table"), &source["table"]);
+        merge_toml(destination.entry("tables"), &source["tables"]);
+        merge_toml(destination.entry("will_be_overwritten"), &source["will_be_overwritten"]);
+        merge_toml(destination.entry("will_be_removed"), &Item::None);
 
         let expected = indoc! {r#"
+            will_be_overwritten = "hello, world!"
+
             [table ]
             life = 42
             hangar = "23"
+
+            [[tables ]]
+            always = [7, 11]
         "#};
         assert_eq!(destination.to_string(), expected);
     }
