@@ -139,10 +139,7 @@ jobs:
       - name: Run tests
         run: just all_features=${{ matrix.all-features }} test
 
-  tarpaulin:
-    # Note: there seems to be an issue in `cargo-tarpaulin` when using Rust 1.75.0 or later - it reports some missing line coverage.
-    # I've entered an issue: https://github.com/xd009642/tarpaulin/issues/1438
-    # In the meantime, let's pin the Rust version used for code coverage to 1.74.1 until we know what's happening.
+  coverage:
     name: Code coverage
     runs-on: ubuntu-latest
     steps:
@@ -152,7 +149,7 @@ jobs:
       - name: Install Rust
         uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
         with:
-          toolchain: 1.74.1
+          toolchain: stable
           cache: false
 
       - name: Rust Cache
@@ -160,20 +157,19 @@ jobs:
         with:
           cache-targets: false
 
-      - name: Install cargo-tarpaulin
+      - name: Install just and cargo-llvm-cov
         uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
         with:
-          tool: cargo-tarpaulin
+          tool: just,cargo-llvm-cov
 
-      - name: Run cargo-tarpaulin
-        uses: clechasseur/rs-cargo@7f70e375af32a065d31856c21fd53b638d38e057
-        with:
-          command: tarpaulin
+      - name: Run cargo-llvm-cov
+        run: just cover
 
       - name: Upload code coverage results to codecov.io
         uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: codecov.json
           fail_ci_if_error: true
 
       - name: Archive code coverage results
@@ -181,8 +177,9 @@ jobs:
         with:
           name: code-coverage-report
           path: |
-            cobertura.xml
-            tarpaulin-report.html
+            codecov.json
+            lcov.info
+            target/llvm-cov/html
 
   doc:
     name: Rustdoc check for Rust ${{ matrix.toolchain }}${{ matrix.experimental && ' (experimental)' || '' }}
