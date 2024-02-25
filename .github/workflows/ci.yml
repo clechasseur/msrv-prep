@@ -79,8 +79,8 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@23bce251a8cd2ffc3c1075eaa2367cf899916d84
         with:
-          prefix-key: v4-rust
-          key: all-features-${{ matrix.all-features }}-msrv-cargo-files-${{ hashFiles('**/Cargo.*.msrv') }}
+          prefix-key: v5-rust
+          key: all-features-${{ matrix.all-features }}-msrv-pins-files-${{ hashFiles('**/msrv-pins.toml') }}
 
       - name: Install just, cargo-hack and cargo-minimal-versions
         uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
