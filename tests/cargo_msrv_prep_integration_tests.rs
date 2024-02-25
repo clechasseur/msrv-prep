@@ -1,24 +1,9 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use assert_fs::fixture::PathCopy;
 use assert_fs::TempDir;
-use predicates::path::eq_file;
-use predicates::str::PredicateStrExt;
-use predicates::Predicate;
-
-fn backup_manifests(path: PathBuf) {
-    if path.join("Cargo.toml").is_file() {
-        fs::copy(path.join("Cargo.toml"), path.join("Cargo.toml.bak")).unwrap();
-    }
-
-    for entry in fs::read_dir(path).unwrap() {
-        let entry = entry.unwrap();
-        if entry.file_type().unwrap().is_dir() {
-            backup_manifests(entry.path());
-        }
-    }
-}
+use toml::Table;
 
 fn fork_project(project_name: &str) -> TempDir {
     let temp = TempDir::new().unwrap();
@@ -28,26 +13,30 @@ fn fork_project(project_name: &str) -> TempDir {
         .collect();
     temp.copy_from(project_path, &["*.rs", "*.toml"]).unwrap();
 
-    backup_manifests(temp.path().to_path_buf());
-
     temp
 }
 
-fn eq_text_file<P>(path: P) -> impl Predicate<str>
+fn toml_files_equal<A, B>(file_a: A, file_b: B) -> bool
 where
-    P: Into<PathBuf>,
+    A: AsRef<Path>,
+    B: AsRef<Path>,
 {
-    eq_file(path).utf8().unwrap().normalize()
+    let toml_a = fs::read_to_string(file_a).unwrap();
+    let toml_b = fs::read_to_string(file_b).unwrap();
+
+    let toml_a = toml_a.parse::<Table>().unwrap();
+    let toml_b = toml_b.parse::<Table>().unwrap();
+
+    toml_a == toml_b
 }
 
 mod simple_project_tests {
     use assert_cmd::{crate_name, Command};
-    use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
 
     use super::*;
 
-    #[test]
+    #[test_log::test]
     fn all() {
         let temp = fork_project("simple_project").into_persistent();
 
@@ -56,12 +45,13 @@ mod simple_project_tests {
 
         assert.success();
 
-        temp.child("expected")
-            .child("all.toml")
-            .assert(eq_text_file(temp.child("Cargo.toml").path()));
+        assert!(toml_files_equal(
+            temp.child("expected").child("all.toml").path(),
+            temp.child("Cargo.toml").path()
+        ));
     }
 
-    #[test]
+    #[test_log::test]
     fn no_remove_rust_version() {
         let temp = fork_project("simple_project");
 
@@ -74,12 +64,15 @@ mod simple_project_tests {
 
         assert.success();
 
-        temp.child("expected")
-            .child("no-remove-rust-version.toml")
-            .assert(eq_text_file(temp.child("Cargo.toml").path()));
+        assert!(toml_files_equal(
+            temp.child("expected")
+                .child("no-remove-rust-version.toml")
+                .path(),
+            temp.child("Cargo.toml").path()
+        ));
     }
 
-    #[test]
+    #[test_log::test]
     fn no_merge_pinned_dependencies() {
         let temp = fork_project("simple_project");
 
@@ -92,9 +85,12 @@ mod simple_project_tests {
 
         assert.success();
 
-        temp.child("expected")
-            .child("no-merge-pinned-dependencies.toml")
-            .assert(eq_text_file(temp.child("Cargo.toml").path()));
+        assert!(toml_files_equal(
+            temp.child("expected")
+                .child("no-merge-pinned-dependencies.toml")
+                .path(),
+            temp.child("Cargo.toml").path()
+        ));
     }
 }
 
@@ -111,26 +107,33 @@ mod workspace_tests {
         C: IntoIterator<Item = &'a str>,
         U: IntoIterator<Item = &'b str>,
     {
+        let project_path: PathBuf = [env!("CARGO_MANIFEST_DIR"), "resources", "tests", "workspace"]
+            .iter()
+            .collect();
+
         for package in changed {
-            temp.child(package)
-                .child("expected.toml")
-                .assert(eq_text_file(temp.child(package).child("Cargo.toml").path()));
-            temp.child(package)
-                .child("Cargo.toml.bak")
-                .assert(eq_text_file(temp.child(package).child("Cargo.toml.msrv-prep.bak").path()));
+            assert!(toml_files_equal(
+                temp.child(package).child("expected.toml").path(),
+                temp.child(package).child("Cargo.toml").path()
+            ));
+            assert!(toml_files_equal(
+                temp.child(package).child("Cargo.toml.msrv-prep.bak").path(),
+                project_path.join(package).join("Cargo.toml")
+            ));
         }
 
         for package in unchanged {
-            temp.child(package)
-                .child("Cargo.toml.bak")
-                .assert(eq_text_file(temp.child(package).child("Cargo.toml").path()));
+            assert!(toml_files_equal(
+                temp.child(package).child("Cargo.toml").path(),
+                project_path.join(package).join("Cargo.toml")
+            ));
             temp.child(package)
                 .child("Cargo.toml.msrv-prep.bak")
                 .assert(missing());
         }
     }
 
-    #[test]
+    #[test_log::test]
     fn all() {
         let temp = fork_project("workspace");
 
@@ -171,22 +174,22 @@ mod workspace_tests {
             validate_workspace_result(&temp, [package_dir], unchanged);
         }
 
-        #[test]
+        #[test_log::test]
         fn root_package() {
             test_with_package("test-workspace", "");
         }
 
-        #[test]
+        #[test_log::test]
         fn member_a() {
             test_with_package("test-workspace-member-a", "member_a");
         }
 
-        #[test]
+        #[test_log::test]
         fn member_b() {
             test_with_package("test-workspace-member-b", "member_b");
         }
 
-        #[test]
+        #[test_log::test]
         fn member_c() {
             test_with_package("test-workspace-member-c", "member_c");
         }
@@ -218,22 +221,22 @@ mod workspace_tests {
             validate_workspace_result(&temp, changed, [package_dir]);
         }
 
-        #[test]
+        #[test_log::test]
         fn without_root_package() {
             test_without_package("test-workspace", "");
         }
 
-        #[test]
+        #[test_log::test]
         fn without_member_a() {
             test_without_package("test-workspace-member-a", "member_a");
         }
 
-        #[test]
+        #[test_log::test]
         fn without_member_b() {
             test_without_package("test-workspace-member-b", "member_b");
         }
 
-        #[test]
+        #[test_log::test]
         fn without_member_c() {
             test_without_package("test-workspace-member-c", "member_c");
         }
