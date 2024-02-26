@@ -150,6 +150,7 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
         with:
           toolchain: stable
+          components: llvm-tools-preview
           cache: false
 
       - name: Rust Cache
