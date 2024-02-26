@@ -45,11 +45,6 @@ tarpaulin *extra_args:
     {{cargo}} tarpaulin --target-dir target-tarpaulin {{extra_args}}
     {{ if env('CI', '') == '' { `open tarpaulin-report.html` } else { ` ` } }}
 
-cover *extra_args:
-    {{cargo}} llvm-cov --workspace {{all_features_flag}} --lcov --output-path lcov.info {{extra_args}}
-    {{ if env('CI', '') != '' { cargo + " llvm-cov report --codecov --output-path codecov.json" } else { "" } }}
-    {{ if env('CI', '') == '' { cargo + " llvm-cov report --html --open" } else { "" } }}
-
 doc $RUSTDOCFLAGS="-D warnings":
     {{cargo}} doc {{ if env('CI', '') != '' { '--no-deps' } else { '--open' } }} --workspace {{all_features_flag}} {{message_format_flag}}
 
