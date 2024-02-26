@@ -32,16 +32,22 @@ where
 
 mod simple_project_tests {
     use assert_cmd::{crate_name, Command};
+    use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
+    use predicates::path::missing;
 
     use super::*;
 
     #[test_log::test]
     fn all() {
-        let temp = fork_project("simple_project").into_persistent();
+        let temp = fork_project("simple_project");
 
         let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
-        let assert = cmd.current_dir(temp.path()).arg("msrv-prep").assert();
+        let assert = cmd
+            .current_dir(temp.path())
+            .arg("msrv-prep")
+            .arg("-vvvv")
+            .assert();
 
         assert.success();
 
@@ -60,6 +66,7 @@ mod simple_project_tests {
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("--no-remove-rust-version")
+            .arg("-vvvv")
             .assert();
 
         assert.success();
@@ -81,6 +88,7 @@ mod simple_project_tests {
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("--no-merge-pinned-dependencies")
+            .arg("-vvvv")
             .assert();
 
         assert.success();
@@ -91,6 +99,53 @@ mod simple_project_tests {
                 .path(),
             temp.child("Cargo.toml").path()
         ));
+    }
+
+    #[test_log::test]
+    fn dry_run() {
+        let temp = fork_project("simple_project");
+
+        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let assert = cmd
+            .current_dir(temp.path())
+            .arg("msrv-prep")
+            .arg("--dry-run")
+            .arg("-vvvv")
+            .assert();
+
+        assert.success();
+
+        let project_path: PathBuf =
+            [env!("CARGO_MANIFEST_DIR"), "resources", "tests", "simple_project"]
+                .iter()
+                .collect();
+
+        assert!(toml_files_equal(temp.child("Cargo.toml").path(), project_path.join("Cargo.toml")));
+        temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
+    }
+
+    #[test_log::test]
+    fn effectively_a_dry_run() {
+        let temp = fork_project("simple_project");
+
+        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let assert = cmd
+            .current_dir(temp.path())
+            .arg("msrv-prep")
+            .arg("--no-remove-rust-version")
+            .arg("--no-merge-pinned-dependencies")
+            .arg("-vvvv")
+            .assert();
+
+        assert.success();
+
+        let project_path: PathBuf =
+            [env!("CARGO_MANIFEST_DIR"), "resources", "tests", "simple_project"]
+                .iter()
+                .collect();
+
+        assert!(toml_files_equal(temp.child("Cargo.toml").path(), project_path.join("Cargo.toml")));
+        temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
     }
 }
 
@@ -142,6 +197,7 @@ mod workspace_tests {
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("--workspace")
+            .arg("-vvvv")
             .assert();
 
         assert.success();
@@ -161,6 +217,7 @@ mod workspace_tests {
                 .arg("msrv-prep")
                 .arg("--package")
                 .arg(package)
+                .arg("-vvvv")
                 .assert();
 
             assert.success();
@@ -208,6 +265,7 @@ mod workspace_tests {
                 .arg("--workspace")
                 .arg("--exclude")
                 .arg(package)
+                .arg("-vvvv")
                 .assert();
 
             assert.success();

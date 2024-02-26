@@ -79,3 +79,52 @@ where
         self.map_err(|err| err.with_io_context(context))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod impl_io_error_context_for_io_error {
+        use assert_matches::assert_matches;
+
+        use super::*;
+
+        #[test]
+        fn with_io_context() {
+            let error = io::Error::other("oh no").with_io_context(|| "doing something");
+
+            assert_matches!(error, Error::Io { source, context } => {
+                assert_eq!(io::ErrorKind::Other, source.kind());
+                assert_eq!("doing something", context);
+            });
+        }
+    }
+
+    mod impl_io_error_context_for_core_result {
+        use super::*;
+
+        mod with_io_context {
+            use assert_matches::assert_matches;
+
+            use super::*;
+
+            #[test]
+            fn for_ok() {
+                let result = Ok::<_, io::Error>(()).with_io_context(|| "doing something");
+
+                assert_matches!(result, Ok(()));
+            }
+
+            #[test]
+            fn for_error() {
+                let result =
+                    Err::<(), _>(io::Error::other("oh no")).with_io_context(|| "doing something");
+
+                assert_matches!(result, Err(Error::Io { source, context }) => {
+                    assert_eq!(io::ErrorKind::Other, source.kind());
+                    assert_eq!("doing something", context);
+                });
+            }
+        }
+    }
+}

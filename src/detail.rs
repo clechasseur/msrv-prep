@@ -89,7 +89,7 @@ mod tests {
 
     use super::*;
 
-    #[test]
+    #[test_log::test]
     fn test_dependencies_merging() {
         let mut manifest = indoc! {r#"
             [dependencies]
@@ -129,7 +129,7 @@ mod tests {
         assert_eq!(manifest.to_string(), expected);
     }
 
-    #[test]
+    #[test_log::test]
     fn test_build_dependencies_merging() {
         let mut manifest = indoc! {r#"
             [dependencies]
@@ -167,7 +167,7 @@ mod tests {
         assert_eq!(manifest.to_string(), expected);
     }
 
-    #[test]
+    #[test_log::test]
     fn test_target_dependencies_merging() {
         let mut manifest = indoc! {r#"
             [dependencies]
