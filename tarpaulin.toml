@@ -2,6 +2,6 @@
 workspace = true
 all-features = true
 engine = "Llvm"
-exclude-files = [ "target*/*", "src/bin/*", "**/main.rs" ]
+exclude-files = [ "target*/*" ]
 run-types = [ "Tests" ]
 out = [ "Html", "Xml" ]
