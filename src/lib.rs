@@ -181,3 +181,22 @@ fn get_backup_path(manifest_path: &Utf8Path, backup_suffix: &str) -> Result<Utf8
         .and_then(|bfn| manifest_path.parent().map(|par| par.join(bfn)))
         .ok_or_else(|| Error::InvalidManifestPath(manifest_path.into()))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    mod maybe_merge_msrv_dependencies {
+        use assert_matches::assert_matches;
+
+        use super::*;
+
+        #[test_log::test]
+        fn skip_parent_path() {
+            let changed =
+                maybe_merge_msrv_dependencies(&mut Table::new(), "".into(), "msrv-pins.toml");
+
+            assert_matches!(changed, Ok(false));
+        }
+    }
+}

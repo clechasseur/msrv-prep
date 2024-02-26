@@ -84,141 +84,169 @@ fn merge_dependencies_sections(
 
 #[cfg(test)]
 mod tests {
-    use indoc::indoc;
-    use toml_edit::Document;
-
     use super::*;
 
-    #[test_log::test]
-    fn test_dependencies_merging() {
-        let mut manifest = indoc! {r#"
-            [dependencies]
-            serde = "1.0.0"
+    mod merge_msrv_dependencies {
+        use indoc::indoc;
+        use toml_edit::Document;
 
-            [dev-dependencies]
-            indoc = "2.0.0"
+        use super::*;
 
-            [build-dependencies]
-            rustc_version = "0.4.0"
-        "#}
-        .parse::<Document>()
-        .unwrap();
+        #[test_log::test]
+        fn test_dependencies_merging() {
+            let mut manifest = indoc! {r#"
+                [dependencies]
+                serde = "1.0.0"
+    
+                [dev-dependencies]
+                indoc = "2.0.0"
+    
+                [build-dependencies]
+                rustc_version = "0.4.0"
+            "#}
+            .parse::<Document>()
+            .unwrap();
 
-        let msrv_dependencies = indoc! {r#"
-            [dependencies]
-            thiserror = "1.0.0"
-            toml_edit = "0.22.0"
-        "#}
-        .parse::<Document>()
-        .unwrap();
+            let msrv_dependencies = indoc! {r#"
+                [dependencies]
+                thiserror = "1.0.0"
+                toml_edit = "0.22.0"
+            "#}
+            .parse::<Document>()
+            .unwrap();
 
-        assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
+            assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
-        let expected = indoc! {r#"
-            [dependencies]
-            serde = "1.0.0"
-            thiserror = "1.0.0"
-            toml_edit = "0.22.0"
+            let expected = indoc! {r#"
+                [dependencies]
+                serde = "1.0.0"
+                thiserror = "1.0.0"
+                toml_edit = "0.22.0"
+    
+                [dev-dependencies]
+                indoc = "2.0.0"
+    
+                [build-dependencies]
+                rustc_version = "0.4.0"
+            "#};
+            assert_eq!(manifest.to_string(), expected);
+        }
 
-            [dev-dependencies]
-            indoc = "2.0.0"
+        #[test_log::test]
+        fn test_build_dependencies_merging() {
+            let mut manifest = indoc! {r#"
+                [dependencies]
+                serde = "1.0.0"
+    
+                [dev-dependencies]
+                indoc = "2.0.0"
+    
+                [build-dependencies]
+                rustc_version = "0.4.0"
+            "#}
+            .parse::<Document>()
+            .unwrap();
 
-            [build-dependencies]
-            rustc_version = "0.4.0"
-        "#};
-        assert_eq!(manifest.to_string(), expected);
-    }
+            let msrv_dependencies = indoc! {r#"
+                [build-dependencies]
+                cargo_metadata = "0.18.0"
+            "#}
+            .parse::<Document>()
+            .unwrap();
 
-    #[test_log::test]
-    fn test_build_dependencies_merging() {
-        let mut manifest = indoc! {r#"
-            [dependencies]
-            serde = "1.0.0"
+            assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
-            [dev-dependencies]
-            indoc = "2.0.0"
+            let expected = indoc! {r#"
+                [dependencies]
+                serde = "1.0.0"
+    
+                [dev-dependencies]
+                indoc = "2.0.0"
+    
+                [build-dependencies]
+                rustc_version = "0.4.0"
+                cargo_metadata = "0.18.0"
+            "#};
+            assert_eq!(manifest.to_string(), expected);
+        }
 
-            [build-dependencies]
-            rustc_version = "0.4.0"
-        "#}
-        .parse::<Document>()
-        .unwrap();
+        #[test_log::test]
+        fn test_target_dependencies_merging() {
+            let mut manifest = indoc! {r#"
+                [dependencies]
+                serde = "1.0.0"
+    
+                [target.'cfg(windows)'.dependencies]
+                win32_api = "1.0.0"
+    
+                [dev-dependencies]
+                indoc = "2.0.0"
+    
+                [build-dependencies]
+                rustc_version = "0.4.0"
+    
+                [target.'cfg(unix)'.build-dependencies]
+                unix_api = "1.0.0"
+            "#}
+            .parse::<Document>()
+            .unwrap();
 
-        let msrv_dependencies = indoc! {r#"
-            [build-dependencies]
-            cargo_metadata = "0.18.0"
-        "#}
-        .parse::<Document>()
-        .unwrap();
+            let msrv_dependencies = indoc! {r#"
+                [target.'cfg(unix)'.dependencies]
+                unix_specific_crate = "1.0.0"
+    
+                [target.'cfg(unix)'.build-dependencies]
+                another_unix_api = "2.0.0"
+            "#}
+            .parse::<Document>()
+            .unwrap();
 
-        assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
+            assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
-        let expected = indoc! {r#"
-            [dependencies]
-            serde = "1.0.0"
+            let expected = indoc! {r#"
+                [dependencies]
+                serde = "1.0.0"
+                [target.'cfg(unix)'.dependencies]
+                unix_specific_crate = "1.0.0"
+    
+                [target.'cfg(windows)'.dependencies]
+                win32_api = "1.0.0"
+    
+                [dev-dependencies]
+                indoc = "2.0.0"
+    
+                [build-dependencies]
+                rustc_version = "0.4.0"
+    
+                [target.'cfg(unix)'.build-dependencies]
+                unix_api = "1.0.0"
+                another_unix_api = "2.0.0"
+            "#};
+            assert_eq!(manifest.to_string(), expected);
+        }
 
-            [dev-dependencies]
-            indoc = "2.0.0"
+        #[test_log::test]
+        fn test_type_override() {
+            let mut manifest = indoc! {r#"
+                target = "what"
+            "#}
+            .parse::<Document>()
+            .unwrap();
 
-            [build-dependencies]
-            rustc_version = "0.4.0"
-            cargo_metadata = "0.18.0"
-        "#};
-        assert_eq!(manifest.to_string(), expected);
-    }
+            let msrv_dependencies = indoc! {r#"
+                [target.'cfg(unix)'.dependencies]
+                unix_specific_crate = "1.0.0"
+            "#}
+            .parse::<Document>()
+            .unwrap();
 
-    #[test_log::test]
-    fn test_target_dependencies_merging() {
-        let mut manifest = indoc! {r#"
-            [dependencies]
-            serde = "1.0.0"
+            assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
-            [target.'cfg(windows)'.dependencies]
-            win32_api = "1.0.0"
-
-            [dev-dependencies]
-            indoc = "2.0.0"
-
-            [build-dependencies]
-            rustc_version = "0.4.0"
-
-            [target.'cfg(unix)'.build-dependencies]
-            unix_api = "1.0.0"
-        "#}
-        .parse::<Document>()
-        .unwrap();
-
-        let msrv_dependencies = indoc! {r#"
-            [target.'cfg(unix)'.dependencies]
-            unix_specific_crate = "1.0.0"
-
-            [target.'cfg(unix)'.build-dependencies]
-            another_unix_api = "2.0.0"
-        "#}
-        .parse::<Document>()
-        .unwrap();
-
-        assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
-
-        let expected = indoc! {r#"
-            [dependencies]
-            serde = "1.0.0"
-            [target.'cfg(unix)'.dependencies]
-            unix_specific_crate = "1.0.0"
-
-            [target.'cfg(windows)'.dependencies]
-            win32_api = "1.0.0"
-
-            [dev-dependencies]
-            indoc = "2.0.0"
-
-            [build-dependencies]
-            rustc_version = "0.4.0"
-
-            [target.'cfg(unix)'.build-dependencies]
-            unix_api = "1.0.0"
-            another_unix_api = "2.0.0"
-        "#};
-        assert_eq!(manifest.to_string(), expected);
+            let expected = indoc! {r#"
+                [target.'cfg(unix)'.dependencies]
+                unix_specific_crate = "1.0.0"
+            "#};
+            assert_eq!(manifest.to_string(), expected);
+        }
     }
 }

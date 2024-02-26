@@ -30,7 +30,7 @@ where
     toml_a == toml_b
 }
 
-mod simple_project_tests {
+mod simple_project {
     use assert_cmd::{crate_name, Command};
     use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
@@ -147,9 +147,47 @@ mod simple_project_tests {
         assert!(toml_files_equal(temp.child("Cargo.toml").path(), project_path.join("Cargo.toml")));
         temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
     }
+
+    #[test_log::test]
+    fn fail_because_backup_manifest_already_exists() {
+        let temp = fork_project("simple_project");
+        fs::write(temp.child("Cargo.toml.msrv-prep.bak"), b"").unwrap();
+
+        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let assert = cmd
+            .current_dir(temp.path())
+            .arg("msrv-prep")
+            .arg("-vvvv")
+            .assert();
+
+        assert.failure();
+
+        assert_eq!("", fs::read_to_string(temp.child("Cargo.toml.msrv-prep.bak").path()).unwrap());
+    }
+
+    #[test_log::test]
+    fn overwrite_existing_manifest_backup() {
+        let temp = fork_project("simple_project");
+        fs::write(temp.child("Cargo.toml.msrv-prep.bak"), b"").unwrap();
+
+        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let assert = cmd
+            .current_dir(temp.path())
+            .arg("msrv-prep")
+            .arg("--force")
+            .arg("-vvvv")
+            .assert();
+
+        assert.success();
+
+        assert!(toml_files_equal(
+            temp.child("expected").child("all.toml").path(),
+            temp.child("Cargo.toml").path()
+        ));
+    }
 }
 
-mod workspace_tests {
+mod workspace {
     use assert_cmd::{crate_name, Command};
     use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
@@ -298,5 +336,34 @@ mod workspace_tests {
         fn without_member_c() {
             test_without_package("test-workspace-member-c", "member_c");
         }
+    }
+}
+
+mod no_changes {
+    use assert_cmd::{crate_name, Command};
+    use assert_fs::assert::PathAssert;
+    use assert_fs::fixture::PathChild;
+    use predicates::path::missing;
+
+    use super::*;
+
+    #[test_log::test]
+    fn no_op() {
+        let temp = fork_project("no_changes");
+
+        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let assert = cmd
+            .current_dir(temp.path())
+            .arg("msrv-prep")
+            .arg("-vvvv")
+            .assert();
+
+        assert.success();
+
+        assert!(toml_files_equal(
+            temp.child("expected.toml").path(),
+            temp.child("Cargo.toml").path()
+        ));
+        temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
     }
 }
