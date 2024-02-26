@@ -41,9 +41,20 @@ test *extra_args:
 update *extra_args:
     {{cargo}} update {{extra_args}}
 
-tarpaulin *extra_args:
-    {{cargo}} tarpaulin --target-dir target-tarpaulin {{extra_args}}
-    {{ if env('CI', '') == '' { `open tarpaulin-report.html` } else { ` ` } }}
+@tarpaulin *extra_args:
+    # Note: there seems to be an issue in `cargo-tarpaulin` when using Rust 1.75.0 or later - it reports some missing line coverage.
+    # I've entered an issue: https://github.com/xd009642/tarpaulin/issues/1438
+    # In the meantime, let's pin the Rust version used for code coverage to 1.74.1 until we know what's happening.
+    @cargo +1.74.1 tarpaulin --target-dir target-tarpaulin {{extra_args}}
+    {{ if env('CI', '') == '' { `just _open-tarpaulin` } else { ` ` } }}
+
+[unix]
+@_open-tarpaulin:
+    open tarpaulin-report.html
+
+[windows]
+@_open-tarpaulin:
+    ./tarpaulin-report.html
 
 doc $RUSTDOCFLAGS="-D warnings":
     {{cargo}} doc {{ if env('CI', '') != '' { '--no-deps' } else { '--open' } }} --workspace {{all_features_flag}} {{message_format_flag}}
