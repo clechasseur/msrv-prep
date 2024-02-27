@@ -3,6 +3,7 @@ name = "cargo-msrv-prep"
 version = "0.1.0"
 authors = [ "Charles Lechasseur <shiftingbeard@gmx.com>" ]
 edition = "2021"
+rust-version = "1.74.1"
 
 readme = "README.md"
 license = "MIT"

@@ -10,8 +10,7 @@ target-tarpaulin/
 **/*.rs.bk
 
 # Files that exist while we run `cargo minimal-versions`/`cargo msrv`
-Cargo.toml.bak*
-Cargo.lock.bak*
+*.msrv-prep*.bak
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
