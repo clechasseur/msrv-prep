@@ -187,6 +187,35 @@ mod simple_project {
             temp.child("Cargo.toml").path()
         ));
     }
+
+    #[test_log::test]
+    fn custom_values() {
+        let temp = fork_project("simple_project");
+        fs::rename(temp.child("msrv-pins.toml"), temp.child("my-msrv-pins.toml")).unwrap();
+
+        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
+        let assert = cmd
+            .arg("msrv-prep")
+            .arg("--manifest-path")
+            .arg(temp.child("Cargo.toml").to_string_lossy().as_ref())
+            .arg("--manifest-backup-suffix")
+            .arg(".my-msrv-prep.bak")
+            .arg("--pins-file-name")
+            .arg("my-msrv-pins.toml")
+            .arg("-vvvv")
+            .assert();
+
+        assert.success();
+
+        assert!(toml_files_equal(
+            temp.child("expected").child("all.toml").path(),
+            temp.child("Cargo.toml")
+        ));
+        assert!(toml_files_equal(
+            temp.child("Cargo.toml.my-msrv-prep.bak").path(),
+            project_path("simple_project").join("Cargo.toml")
+        ));
+    }
 }
 
 mod workspace {

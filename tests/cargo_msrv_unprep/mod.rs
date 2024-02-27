@@ -17,7 +17,7 @@ fn project_path(project_name: &str) -> PathBuf {
 fn fork_project(project_name: &str) -> TempDir {
     let temp = TempDir::new().unwrap();
 
-    temp.copy_from(project_path(project_name), &["*.rs", "*.toml"])
+    temp.copy_from(project_path(project_name), &["*.rs", "*.toml", "*.bak"])
         .unwrap();
 
     temp
@@ -26,9 +26,12 @@ fn fork_project(project_name: &str) -> TempDir {
 fn validate_unprep_result(temp_path: &ChildPath, project_path: &ChildPath) {
     let manifest_path = temp_path.child("Cargo.toml");
     if manifest_path.is_file() {
-        project_path
-            .child("Cargo.toml")
-            .assert(eq_file(manifest_path.path()));
+        let mut project_manifest_path = project_path.child("Cargo.toml.msrv-prep.bak");
+        if !project_manifest_path.is_file() {
+            project_manifest_path = project_path.child("Cargo.toml");
+        }
+
+        project_manifest_path.assert(eq_file(manifest_path.path()));
     }
     temp_path
         .child("Cargo.toml.msrv-prep.bak")
@@ -63,19 +66,52 @@ fn perform_unprep_test(project_name: &str) {
     );
 }
 
-macro_rules! unprep_test {
-    ($proj_name:ident) => {
-        mod $proj_name {
-            use super::*;
+mod default_values {
+    use super::*;
 
+    macro_rules! unprep_test {
+        ($proj_name:ident) => {
             #[test_log::test]
-            fn unprep() {
+            fn $proj_name() {
                 perform_unprep_test(stringify!($proj_name));
             }
-        }
-    };
+        };
+    }
+
+    unprep_test!(simple_project);
+    unprep_test!(workspace);
+    unprep_test!(no_changes);
 }
 
-unprep_test!(simple_project);
-unprep_test!(workspace);
-unprep_test!(no_changes);
+mod custom_values {
+    use std::fs;
+
+    use super::*;
+
+    #[test_log::test]
+    fn simple_project() {
+        let temp = fork_project("simple_project");
+        fs::rename(
+            temp.child("Cargo.toml.msrv-prep.bak").path(),
+            temp.child("Cargo.toml.my-msrv-prep.bak").path(),
+        )
+        .unwrap();
+
+        let mut cmd = Command::cargo_bin(MSRV_UNPREP_BIN_NAME).unwrap();
+        let assert = cmd
+            .arg("msrv-unprep")
+            .arg("--manifest-path")
+            .arg(temp.child("Cargo.toml").to_string_lossy().as_ref())
+            .arg("--manifest-backup-suffix")
+            .arg(".my-msrv-prep.bak")
+            .arg("-vvvv")
+            .assert();
+
+        assert.success();
+
+        ChildPath::new(project_path("simple_project"))
+            .child("Cargo.toml.msrv-prep.bak")
+            .assert(eq_file(temp.child("Cargo.toml").path()));
+        temp.child("Cargo.toml.my-msrv-prep.bak").assert(missing());
+    }
+}
