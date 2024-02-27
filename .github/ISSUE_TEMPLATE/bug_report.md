@@ -20,9 +20,9 @@ Include sample code that reproduces the error. If required, attach a sample proj
 A clear and concise description of what you expected to happen.
 
 **Environment (please complete the following information):**
- - Rust version: [e.g. 1.72.0]
+ - Rust version: [e.g. 1.74.1]
  - Target: [e.g. `x86_64-unknown-linux-gnu`]
- - Crate version: [e.g. 0.1.0]
+ - Crate version: [e.g. 1.0.0]
 
 **Additional context**
 

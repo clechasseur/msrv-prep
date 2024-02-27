@@ -97,8 +97,8 @@ msrv:
     {{cargo}} msrv -- just check
 
 # Perform `cargo publish` dry-run
-test-package:
-    {{cargo}} publish --dry-run
+test-package *extra_args:
+    {{cargo}} publish --dry-run {{extra_args}}
 
 # Run `cargo msrv-prep` (using local binary)
 prep *extra_args:
