@@ -1,8 +1,8 @@
-# `msrv-prep`
+# `cargo-msrv-prep`
 
 [![CI](https://github.com/clechasseur/msrv-prep/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/clechasseur/msrv-prep/actions/workflows/ci.yml) [![codecov](https://codecov.io/gh/clechasseur/msrv-prep/branch/main/graph/badge.svg?token=y4eecxkGcV)](https://codecov.io/gh/clechasseur/msrv-prep) [![Security audit](https://github.com/clechasseur/msrv-prep/actions/workflows/audit-check.yml/badge.svg?branch=main)](https://github.com/clechasseur/msrv-prep/actions/workflows/audit-check.yml) [![crates.io](https://img.shields.io/crates/v/cargo-msrv-prep.svg)](https://crates.io/crates/cargo-msrv-prep) [![downloads](https://img.shields.io/crates/d/cargo-msrv-prep.svg)](https://crates.io/crates/cargo-msrv-prep) [![docs.rs](https://img.shields.io/badge/docs-latest-blue.svg)](https://docs.rs/cargo-msrv-prep) [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
-Cargo subcommand useful to prepare for determining/verifying a Rust crate's [MSRV](https://github.com/foresterre/cargo-msrv) (_Minimum Supported Rust Version_).
+A Cargo subcommand useful to prepare for determining/verifying a Rust crate's [MSRV](https://doc.rust-lang.org/cargo/reference/manifest.html#the-rust-version-field) (_Minimum Supported Rust Version_).
 
 ## Installing
 
