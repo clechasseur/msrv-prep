@@ -186,6 +186,25 @@ fn get_backup_path(manifest_path: &Utf8Path, backup_suffix: &str) -> Result<Utf8
 mod tests {
     use super::*;
 
+    mod remove_rust_version {
+        use indoc::indoc;
+        use super::*;
+
+        #[test_log::test]
+        fn no_rust_version() {
+            let manifest_text = indoc! {r#"
+                [table]
+                hangar = 23
+            "#};
+            let mut manifest = manifest_text.parse::<Document>().unwrap();
+
+            let changed = remove_rust_version(&mut manifest);
+
+            assert!(!changed);
+            assert_eq!(manifest_text, manifest.to_string());
+        }
+    }
+
     mod maybe_merge_msrv_dependencies {
         use assert_matches::assert_matches;
 
