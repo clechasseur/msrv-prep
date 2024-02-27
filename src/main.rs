@@ -59,7 +59,7 @@ use cargo_msrv_prep::{
     backup_manifest, maybe_merge_msrv_dependencies, remove_rust_version, RUST_VERSION_SPECIFIER,
 };
 use clap::{crate_name, Args, Parser};
-use log::{debug, info, log_enabled, trace, Level};
+use log::{debug, info, trace};
 use toml_edit::Document;
 
 fn main() -> cargo_msrv_prep::Result<()> {
@@ -131,16 +131,7 @@ fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
 
     let metadata: Metadata = (&args.common).try_into()?;
     debug!("Workspace root: {}", metadata.cargo_metadata.workspace_root);
-    if log_enabled!(Level::Debug) {
-        let selected_package_names = metadata
-            .selected_packages
-            .iter()
-            .map(|p| p.name.as_str())
-            .collect::<Vec<_>>()
-            .join(", ");
-
-        debug!("Selected packages: {}", selected_package_names);
-    }
+    debug!("Selected packages: {}", metadata.selected_package_names());
 
     for package in &metadata.selected_packages {
         info!("Preparing manifest '{}' (at '{}')", package.name, package.manifest_path);

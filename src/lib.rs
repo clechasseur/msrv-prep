@@ -17,7 +17,6 @@ pub mod result;
 use std::fs;
 
 use cargo_metadata::camino::{Utf8Path, Utf8PathBuf};
-use cargo_metadata::Package;
 use log::{debug, error, info, trace, warn};
 pub use result::Error;
 pub use result::Result;
@@ -31,20 +30,6 @@ pub const DEFAULT_MANIFEST_BACKUP_SUFFIX: &str = ".msrv-prep.bak";
 
 /// Field in the `package` section of a manifest that stores the package's MSRV.
 pub const RUST_VERSION_SPECIFIER: &str = "rust-version";
-
-/// Restores manifests modified by `cargo-msrv-prep`.
-///
-/// This will scan the provided packages and look for backed-up original manifest
-/// files; any found is restored to its original version.
-pub fn unprep_from_msrv(_packages: Vec<&Package>, _backup_suffix: &str) -> Result<()> {
-    todo!("Move this to `cargo-msrv-unprep`");
-
-    // for package in packages {
-    //     maybe_restore_manifest(&package.manifest_path, backup_suffix)?;
-    // }
-    //
-    // Ok(())
-}
 
 /// Removes the `rust-version` field from a Cargo manifest's
 /// `package` section, if present.
@@ -188,6 +173,7 @@ mod tests {
 
     mod remove_rust_version {
         use indoc::indoc;
+
         use super::*;
 
         #[test_log::test]

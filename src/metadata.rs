@@ -7,6 +7,16 @@ pub struct Metadata {
     pub selected_packages: Vec<Package>,
 }
 
+impl Metadata {
+    pub fn selected_package_names(&self) -> String {
+        self.selected_packages
+            .iter()
+            .map(|p| p.name.as_str())
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+}
+
 impl TryFrom<&CommonArgs> for Metadata {
     type Error = crate::Error;
 

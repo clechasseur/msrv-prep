@@ -16,6 +16,10 @@ description = "Cargo subcommand useful to prepare for determining/verifying a cr
 keywords = [ "cli", "cargo", "subcommand", "testing" ]
 categories = [ "command-line-utilities", "development-tools::cargo-plugins", "development-tools::testing" ]
 
+[[bin]]
+name = "cargo-msrv-unprep"
+path = "src/bin/cargo_msrv_unprep.rs"
+
 [dependencies]
 cargo_metadata = "0.18.1"
 clap = { version = "4.5.1", features = ["cargo", "derive"] }

@@ -5,6 +5,8 @@ use assert_fs::fixture::PathCopy;
 use assert_fs::TempDir;
 use toml::Table;
 
+const MSRV_PREP_BIN_NAME: &str = env!("CARGO_BIN_EXE_cargo-msrv-prep");
+
 fn fork_project(project_name: &str) -> TempDir {
     let temp = TempDir::new().unwrap();
 
@@ -31,7 +33,7 @@ where
 }
 
 mod simple_project {
-    use assert_cmd::{crate_name, Command};
+    use assert_cmd::Command;
     use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
     use predicates::path::missing;
@@ -42,7 +44,7 @@ mod simple_project {
     fn all() {
         let temp = fork_project("simple_project");
 
-        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
         let assert = cmd
             .current_dir(temp.path())
             .arg("msrv-prep")
@@ -61,7 +63,7 @@ mod simple_project {
     fn no_remove_rust_version() {
         let temp = fork_project("simple_project");
 
-        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
         let assert = cmd
             .current_dir(temp.path())
             .arg("msrv-prep")
@@ -83,7 +85,7 @@ mod simple_project {
     fn no_merge_pinned_dependencies() {
         let temp = fork_project("simple_project");
 
-        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
         let assert = cmd
             .current_dir(temp.path())
             .arg("msrv-prep")
@@ -105,7 +107,7 @@ mod simple_project {
     fn dry_run() {
         let temp = fork_project("simple_project");
 
-        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
         let assert = cmd
             .current_dir(temp.path())
             .arg("msrv-prep")
@@ -128,7 +130,7 @@ mod simple_project {
     fn effectively_a_dry_run() {
         let temp = fork_project("simple_project");
 
-        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
         let assert = cmd
             .current_dir(temp.path())
             .arg("msrv-prep")
@@ -153,7 +155,7 @@ mod simple_project {
         let temp = fork_project("simple_project");
         fs::write(temp.child("Cargo.toml.msrv-prep.bak"), b"").unwrap();
 
-        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
         let assert = cmd
             .current_dir(temp.path())
             .arg("msrv-prep")
@@ -170,7 +172,7 @@ mod simple_project {
         let temp = fork_project("simple_project");
         fs::write(temp.child("Cargo.toml.msrv-prep.bak"), b"").unwrap();
 
-        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
         let assert = cmd
             .current_dir(temp.path())
             .arg("msrv-prep")
@@ -188,7 +190,7 @@ mod simple_project {
 }
 
 mod workspace {
-    use assert_cmd::{crate_name, Command};
+    use assert_cmd::Command;
     use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
     use predicates::path::missing;
@@ -230,7 +232,7 @@ mod workspace {
     fn all() {
         let temp = fork_project("workspace");
 
-        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
         let assert = cmd
             .current_dir(temp.path())
             .arg("msrv-prep")
@@ -249,7 +251,7 @@ mod workspace {
         fn test_with_package(package: &str, package_dir: &str) {
             let temp = fork_project("workspace");
 
-            let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+            let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
             let assert = cmd
                 .current_dir(temp.path())
                 .arg("msrv-prep")
@@ -296,7 +298,7 @@ mod workspace {
         fn test_without_package(package: &str, package_dir: &str) {
             let temp = fork_project("workspace");
 
-            let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+            let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
             let assert = cmd
                 .current_dir(temp.path())
                 .arg("msrv-prep")
@@ -340,7 +342,7 @@ mod workspace {
 }
 
 mod no_changes {
-    use assert_cmd::{crate_name, Command};
+    use assert_cmd::Command;
     use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
     use predicates::path::missing;
@@ -351,7 +353,7 @@ mod no_changes {
     fn no_op() {
         let temp = fork_project("no_changes");
 
-        let mut cmd = Command::cargo_bin(crate_name!()).unwrap();
+        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
         let assert = cmd
             .current_dir(temp.path())
             .arg("msrv-prep")
