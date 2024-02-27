@@ -1,6 +1,6 @@
 [package]
 name = "cargo-msrv-prep"
-version = "1.0.0"
+version = "0.1.0"
 authors = [ "Charles Lechasseur <shiftingbeard@gmx.com>" ]
 edition = "2021"
 rust-version = "1.74.1"
@@ -16,6 +16,8 @@ description = "Cargo subcommand useful to prepare for determining/verifying a cr
 
 keywords = [ "cli", "cargo", "subcommand", "testing" ]
 categories = [ "command-line-utilities", "development-tools::cargo-plugins", "development-tools::testing" ]
+
+include = [ "src/**/*", "tests/**/*", "resources/**/*", "Cargo.lock", "Cargo.toml", "LICENSE", "README.md" ]
 
 [[bin]]
 name = "cargo-msrv-unprep"

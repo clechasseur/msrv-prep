@@ -129,7 +129,7 @@ dependencies = [
 
 [[package]]
 name = "cargo-msrv-prep"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "assert_cmd",
  "assert_fs",
