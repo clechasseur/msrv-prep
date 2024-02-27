@@ -62,6 +62,9 @@ use clap::{crate_name, Args, Parser};
 use log::{debug, info, trace};
 use toml_edit::Document;
 
+#[mockall_double::double]
+use crate::mockable::fs as mockable_fs;
+
 fn main() -> cargo_msrv_prep::Result<()> {
     let Cli::MsrvPrep(args) = Cli::parse();
 
@@ -75,6 +78,26 @@ fn main() -> cargo_msrv_prep::Result<()> {
 
     info!("{} finished", crate_name!());
     Ok(())
+}
+
+mod mockable {
+    #[cfg_attr(test, mockall::automock)]
+    pub(super) mod fs {
+        use std::fs as real_fs;
+        use std::io;
+        use std::path::Path;
+
+        #[allow(dead_code)]
+        #[cfg(not(tarpaulin_include))]
+        #[cfg_attr(test, mockall::concretize)]
+        pub fn write<P, C>(path: P, contents: C) -> io::Result<()>
+        where
+            P: AsRef<Path>,
+            C: AsRef<[u8]>,
+        {
+            real_fs::write(path, contents)
+        }
+    }
 }
 
 /// Default name of TOML file containing pinned crates used when determining/verifying MSRV.
@@ -173,9 +196,9 @@ fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
                     &args.common.manifest_backup_suffix,
                     args.force,
                 )?;
-                fs::write(&package.manifest_path, &manifest.to_string()).with_io_context(|| {
-                    format!("saving updated manifest content to '{}'", package.manifest_path)
-                })?;
+                mockable_fs::write(&package.manifest_path, &manifest.to_string()).with_io_context(
+                    || format!("saving updated manifest content to '{}'", package.manifest_path),
+                )?;
             } else {
                 info!(
                     "Manifest for '{}' changed after preparation; not persisting (dry-run mode)",
@@ -189,4 +212,64 @@ fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
 
     trace!("Exiting `prep_for_msrv`");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use assert_fs::fixture::PathCopy;
+    use assert_fs::TempDir;
+
+    use super::*;
+
+    fn project_path(project_name: &str) -> PathBuf {
+        [env!("CARGO_MANIFEST_DIR"), "resources", "tests", "cargo-msrv-prep", project_name]
+            .iter()
+            .collect()
+    }
+
+    fn fork_project(project_name: &str) -> TempDir {
+        let temp = TempDir::new().unwrap();
+
+        temp.copy_from(project_path(project_name), &["*.rs", "*.toml"])
+            .unwrap();
+
+        temp
+    }
+
+    mod errors {
+        use std::io;
+
+        use assert_fs::fixture::PathChild;
+        use assert_matches::assert_matches;
+        use cargo_msrv_prep::Error;
+
+        use super::*;
+
+        #[test_log::test]
+        fn modified_manifest_write_error() {
+            let temp = fork_project("simple_project");
+
+            let Cli::MsrvPrep(args) = Cli::parse_from(
+                [
+                    "cargo".to_string(),
+                    "msrv-prep".to_string(),
+                    "--manifest-path".to_string(),
+                    temp.child("Cargo.toml").to_string_lossy().to_string(),
+                    "-vvvv".to_string(),
+                ]
+                .iter(),
+            );
+
+            let ctx = mockable_fs::write_context();
+            ctx.expect().returning(|_, _| {
+                Err(io::Error::new(io::ErrorKind::PermissionDenied, "permission denied"))
+            });
+
+            assert_matches!(prep_for_msrv(&args), Err(Error::Io { source, .. }) => {
+                assert_eq!(io::ErrorKind::PermissionDenied, source.kind());
+            });
+        }
+    }
 }

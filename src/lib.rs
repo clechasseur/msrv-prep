@@ -12,6 +12,7 @@
 pub mod common_args;
 mod detail;
 pub mod metadata;
+pub(crate) mod mockable;
 pub mod result;
 
 use std::fs;
@@ -23,6 +24,8 @@ pub use result::Result;
 use toml_edit::{Document, Item, Table};
 
 use crate::detail::{merge_msrv_dependencies, PACKAGE_SECTION_NAME};
+#[mockall_double::double]
+use crate::mockable::fs as mockable_fs;
 use crate::result::IoErrorContext;
 
 /// Default suffix used to backup manifest files before determining/verifying MSRV.
@@ -123,7 +126,7 @@ pub fn backup_manifest(manifest_path: &Utf8Path, backup_suffix: &str, force: boo
     }
 
     info!("Backing up manifest at '{}' to '{}'", manifest_path, backup_path);
-    fs::copy(manifest_path, &backup_path)
+    mockable_fs::copy(manifest_path, &backup_path)
         .map(|_| ())
         .with_io_context(|| {
             format!("backing up manifest at '{}' to '{}'", manifest_path, backup_path)
@@ -150,7 +153,7 @@ pub fn maybe_restore_manifest(manifest_path: &Utf8Path, backup_suffix: &str) -> 
     if backup_path.is_file() {
         info!("Manifest backup file found at '{}'; restoring to '{}'", backup_path, manifest_path);
 
-        fs::rename(&backup_path, manifest_path).with_io_context(|| {
+        mockable_fs::rename(&backup_path, manifest_path).with_io_context(|| {
             format!("restoring manifest backup from '{}' to '{}'", backup_path, manifest_path)
         })?;
     }
@@ -202,6 +205,83 @@ mod tests {
                 maybe_merge_msrv_dependencies(&mut Table::new(), "".into(), "msrv-pins.toml");
 
             assert_matches!(changed, Ok(false));
+        }
+    }
+
+    mod backup_manifest {
+        use super::*;
+
+        mod errors {
+            use std::io;
+
+            use assert_matches::assert_matches;
+
+            use super::*;
+
+            #[test_log::test]
+            fn backup_copy_error() {
+                let project_path: Utf8PathBuf = [
+                    env!("CARGO_MANIFEST_DIR"),
+                    "resources",
+                    "tests",
+                    "cargo-msrv-prep",
+                    "simple_project",
+                ]
+                .iter()
+                .collect();
+
+                let ctx = mockable_fs::copy_context();
+                ctx.expect().returning(|_, _| {
+                    Err(io::Error::new(io::ErrorKind::PermissionDenied, "permission denied"))
+                });
+
+                let result = backup_manifest(
+                    &project_path.join("Cargo.toml"),
+                    DEFAULT_MANIFEST_BACKUP_SUFFIX,
+                    true,
+                );
+                assert_matches!(result, Err(Error::Io { source, .. }) => {
+                    assert_eq!(io::ErrorKind::PermissionDenied, source.kind());
+                });
+            }
+        }
+    }
+
+    mod maybe_restore_manifest {
+        use super::*;
+
+        mod errors {
+            use std::io;
+
+            use assert_matches::assert_matches;
+
+            use super::*;
+
+            #[test_log::test]
+            fn backup_rename_error() {
+                let project_path: Utf8PathBuf = [
+                    env!("CARGO_MANIFEST_DIR"),
+                    "resources",
+                    "tests",
+                    "cargo-msrv-unprep",
+                    "simple_project",
+                ]
+                .iter()
+                .collect();
+
+                let ctx = mockable_fs::rename_context();
+                ctx.expect().returning(|_, _| {
+                    Err(io::Error::new(io::ErrorKind::PermissionDenied, "permission denied"))
+                });
+
+                let result = maybe_restore_manifest(
+                    &project_path.join("Cargo.toml"),
+                    DEFAULT_MANIFEST_BACKUP_SUFFIX,
+                );
+                assert_matches!(result, Err(Error::Io { source, .. }) => {
+                    assert_eq!(io::ErrorKind::PermissionDenied, source.kind());
+                });
+            }
         }
     }
 }
