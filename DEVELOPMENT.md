@@ -4,10 +4,10 @@ This guide is meant for people wishing to contribute to this open-source project
 
 ### Rust
 
-You need at least **Rust 1.68.2** (_TODO validate this minimum version_) to build this project's code and run the tests. You can install Rust from the [official website](https://www.rust-lang.org/tools/install).
+You need at least **Rust 1.74.1** to build this project's code and run the tests. You can install Rust from the [official website](https://www.rust-lang.org/tools/install).
 If you already have a version of Rust installed via `rustup` but it's too old, you can update by running
 
-```bash
+```sh
 rustup update
 ```
 
@@ -15,7 +15,7 @@ rustup update
 
 In order to run `rustfmt`, you will need a Nightly Rust toolset. If you do not have one installed, you can install one via `rustup` by running
 
-```bash
+```sh
 rustup toolchain install nightly
 ```
 
@@ -27,13 +27,13 @@ If you already have one installed but it was too old, it was probably updated ea
 
 This project includes a [justfile](justfile) that makes it easier to run the various tools used for development. To install `just` via `cargo`, simply run
 
-```bash
+```sh
 cargo install just
 ```
 
 If you have [cargo-binstall](https://github.com/cargo-bins/cargo-binstall), it'll probably be faster to use it instead:
 
-```bash
+```sh
 cargo binstall just
 ```
 
@@ -43,12 +43,13 @@ You can also install it via various [methods](https://github.com/casey/just#pack
 
 If you want to run tests with coverage locally, you'll need to install [`cargo-tarpaulin`](https://github.com/xd009642/tarpaulin), a code coverage tool for Rust. You can install it via `cargo`:
 
-```bash
+```sh
 cargo install cargo-tarpaulin
 ```
+
 You can also install it via [cargo-binstall](https://github.com/cargo-bins/cargo-binstall):
 
-```bash
+```sh
 cargo binstall cargo-tarpaulin
 ```
 
@@ -58,7 +59,7 @@ cargo binstall cargo-tarpaulin
 
 In order to run all tests, you can use
 
-```bash
+```sh
 just test
 ```
 
@@ -68,7 +69,7 @@ Any new feature or bug fix would need new tests to validate. Make sure all tests
 
 Before submitting a PR, make sure `rustfmt` and `clippy` are happy. To tidy up your code before committing, simply run
 
-```bash
+```sh
 just tidy
 ```
 
@@ -78,22 +79,12 @@ Required checks will not pass if either of those report issues.
 
 This project's [code coverage settings](codecov.yml) are pretty stringent and require **100% coverage**. To validate this locally, you can run
 
-```bash
+```sh
 just tarpaulin
 ```
 
 Make sure coverage is at the required level before submitting a PR.
 
-### Generating documentation
-
-All public symbols in the crate need to be documented, otherwise checks won't pass. To validate this, you can generate docs locally by running
-
-```bash
-just doc
-```
-
-Make sure any new public symbol is documented before submitting a PR.
-
 ## Questions?
 
-If any part of this documentation is unclear, please open a [new issue](https://github.com/clechasseur/msrv-prep/issues/new/choose) so it can be fixed.
+If any part of this documentation is unclear, please open a [new issue](https://github.com/clechasseur/msrv-prep/issues/new/choose), so it can be fixed.
