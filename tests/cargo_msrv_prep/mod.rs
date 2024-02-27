@@ -5,7 +5,7 @@ use assert_fs::fixture::PathCopy;
 use assert_fs::TempDir;
 use toml::Table;
 
-const MSRV_PREP_BIN_NAME: &str = env!("CARGO_BIN_EXE_cargo-msrv-prep");
+const MSRV_PREP_BIN_EXE: &str = env!("CARGO_BIN_EXE_cargo-msrv-prep");
 
 fn project_path(project_name: &str) -> PathBuf {
     [env!("CARGO_MANIFEST_DIR"), "resources", "tests", "cargo-msrv-prep", project_name]
@@ -48,14 +48,12 @@ mod simple_project {
     fn all() {
         let temp = fork_project("simple_project");
 
-        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-        let assert = cmd
+        Command::new(MSRV_PREP_BIN_EXE)
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("-vvvv")
-            .assert();
-
-        assert.success();
+            .assert()
+            .success();
 
         assert!(toml_files_equal(
             temp.child("expected").child("all.toml").path(),
@@ -67,15 +65,13 @@ mod simple_project {
     fn no_remove_rust_version() {
         let temp = fork_project("simple_project");
 
-        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-        let assert = cmd
+        Command::new(MSRV_PREP_BIN_EXE)
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("--no-remove-rust-version")
             .arg("-vvvv")
-            .assert();
-
-        assert.success();
+            .assert()
+            .success();
 
         assert!(toml_files_equal(
             temp.child("expected")
@@ -89,15 +85,13 @@ mod simple_project {
     fn no_merge_pinned_dependencies() {
         let temp = fork_project("simple_project");
 
-        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-        let assert = cmd
+        Command::new(MSRV_PREP_BIN_EXE)
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("--no-merge-pinned-dependencies")
             .arg("-vvvv")
-            .assert();
-
-        assert.success();
+            .assert()
+            .success();
 
         assert!(toml_files_equal(
             temp.child("expected")
@@ -111,15 +105,13 @@ mod simple_project {
     fn dry_run() {
         let temp = fork_project("simple_project");
 
-        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-        let assert = cmd
+        Command::new(MSRV_PREP_BIN_EXE)
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("--dry-run")
             .arg("-vvvv")
-            .assert();
-
-        assert.success();
+            .assert()
+            .success();
 
         assert!(toml_files_equal(
             temp.child("Cargo.toml").path(),
@@ -132,16 +124,14 @@ mod simple_project {
     fn effectively_a_dry_run() {
         let temp = fork_project("simple_project");
 
-        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-        let assert = cmd
+        Command::new(MSRV_PREP_BIN_EXE)
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("--no-remove-rust-version")
             .arg("--no-merge-pinned-dependencies")
             .arg("-vvvv")
-            .assert();
-
-        assert.success();
+            .assert()
+            .success();
 
         assert!(toml_files_equal(
             temp.child("Cargo.toml").path(),
@@ -155,14 +145,12 @@ mod simple_project {
         let temp = fork_project("simple_project");
         fs::write(temp.child("Cargo.toml.msrv-prep.bak"), b"").unwrap();
 
-        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-        let assert = cmd
+        Command::new(MSRV_PREP_BIN_EXE)
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("-vvvv")
-            .assert();
-
-        assert.failure();
+            .assert()
+            .failure();
 
         assert_eq!("", fs::read_to_string(temp.child("Cargo.toml.msrv-prep.bak").path()).unwrap());
     }
@@ -172,15 +160,13 @@ mod simple_project {
         let temp = fork_project("simple_project");
         fs::write(temp.child("Cargo.toml.msrv-prep.bak"), b"").unwrap();
 
-        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-        let assert = cmd
+        Command::new(MSRV_PREP_BIN_EXE)
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("--force")
             .arg("-vvvv")
-            .assert();
-
-        assert.success();
+            .assert()
+            .success();
 
         assert!(toml_files_equal(
             temp.child("expected").child("all.toml").path(),
@@ -193,8 +179,7 @@ mod simple_project {
         let temp = fork_project("simple_project");
         fs::rename(temp.child("msrv-pins.toml"), temp.child("my-msrv-pins.toml")).unwrap();
 
-        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-        let assert = cmd
+        Command::new(MSRV_PREP_BIN_EXE)
             .arg("msrv-prep")
             .arg("--manifest-path")
             .arg(temp.child("Cargo.toml").to_string_lossy().as_ref())
@@ -203,9 +188,8 @@ mod simple_project {
             .arg("--pins-file-name")
             .arg("my-msrv-pins.toml")
             .arg("-vvvv")
-            .assert();
-
-        assert.success();
+            .assert()
+            .success();
 
         assert!(toml_files_equal(
             temp.child("expected").child("all.toml").path(),
@@ -259,15 +243,13 @@ mod workspace {
     fn all() {
         let temp = fork_project("workspace");
 
-        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-        let assert = cmd
+        Command::new(MSRV_PREP_BIN_EXE)
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("--workspace")
             .arg("-vvvv")
-            .assert();
-
-        assert.success();
+            .assert()
+            .success();
 
         validate_workspace_result(&temp, ["", "member_a", "member_b", "member_c"], []);
     }
@@ -278,16 +260,14 @@ mod workspace {
         fn test_with_package(package: &str, package_dir: &str) {
             let temp = fork_project("workspace");
 
-            let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-            let assert = cmd
+            Command::new(MSRV_PREP_BIN_EXE)
                 .current_dir(temp.path())
                 .arg("msrv-prep")
                 .arg("--package")
                 .arg(package)
                 .arg("-vvvv")
-                .assert();
-
-            assert.success();
+                .assert()
+                .success();
 
             let unchanged = ["", "member_a", "member_b", "member_c"]
                 .iter()
@@ -325,17 +305,15 @@ mod workspace {
         fn test_without_package(package: &str, package_dir: &str) {
             let temp = fork_project("workspace");
 
-            let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-            let assert = cmd
+            Command::new(MSRV_PREP_BIN_EXE)
                 .current_dir(temp.path())
                 .arg("msrv-prep")
                 .arg("--workspace")
                 .arg("--exclude")
                 .arg(package)
                 .arg("-vvvv")
-                .assert();
-
-            assert.success();
+                .assert()
+                .success();
 
             let changed = ["", "member_a", "member_b", "member_c"]
                 .iter()
@@ -380,14 +358,12 @@ mod no_changes {
     fn no_op() {
         let temp = fork_project("no_changes");
 
-        let mut cmd = Command::cargo_bin(MSRV_PREP_BIN_NAME).unwrap();
-        let assert = cmd
+        Command::new(MSRV_PREP_BIN_EXE)
             .current_dir(temp.path())
             .arg("msrv-prep")
             .arg("-vvvv")
-            .assert();
-
-        assert.success();
+            .assert()
+            .success();
 
         assert!(toml_files_equal(
             temp.child("expected.toml").path(),

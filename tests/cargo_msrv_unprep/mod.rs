@@ -6,7 +6,7 @@ use assert_fs::fixture::{ChildPath, PathChild, PathCopy};
 use assert_fs::TempDir;
 use predicates::path::{eq_file, missing};
 
-const MSRV_UNPREP_BIN_NAME: &str = env!("CARGO_BIN_EXE_cargo-msrv-unprep");
+const MSRV_UNPREP_BIN_EXE: &str = env!("CARGO_BIN_EXE_cargo-msrv-unprep");
 
 fn project_path(project_name: &str) -> PathBuf {
     [env!("CARGO_MANIFEST_DIR"), "resources", "tests", "cargo-msrv-unprep", project_name]
@@ -50,15 +50,13 @@ fn validate_unprep_result(temp_path: &ChildPath, project_path: &ChildPath) {
 fn perform_unprep_test(project_name: &str) {
     let temp = fork_project(project_name);
 
-    let mut cmd = Command::cargo_bin(MSRV_UNPREP_BIN_NAME).unwrap();
-    let assert = cmd
+    Command::new(MSRV_UNPREP_BIN_EXE)
         .current_dir(temp.path())
         .arg("msrv-unprep")
         .arg("--workspace")
         .arg("-vvvv")
-        .assert();
-
-    assert.success();
+        .assert()
+        .success();
 
     validate_unprep_result(
         &ChildPath::new(temp.path()),
@@ -97,17 +95,15 @@ mod custom_values {
         )
         .unwrap();
 
-        let mut cmd = Command::cargo_bin(MSRV_UNPREP_BIN_NAME).unwrap();
-        let assert = cmd
+        Command::new(MSRV_UNPREP_BIN_EXE)
             .arg("msrv-unprep")
             .arg("--manifest-path")
             .arg(temp.child("Cargo.toml").to_string_lossy().as_ref())
             .arg("--manifest-backup-suffix")
             .arg(".my-msrv-prep.bak")
             .arg("-vvvv")
-            .assert();
-
-        assert.success();
+            .assert()
+            .success();
 
         ChildPath::new(project_path("simple_project"))
             .child("Cargo.toml.msrv-prep.bak")
