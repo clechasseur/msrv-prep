@@ -7,13 +7,17 @@ use toml::Table;
 
 const MSRV_PREP_BIN_NAME: &str = env!("CARGO_BIN_EXE_cargo-msrv-prep");
 
+fn project_path(project_name: &str) -> PathBuf {
+    [env!("CARGO_MANIFEST_DIR"), "resources", "tests", "cargo-msrv-prep", project_name]
+        .iter()
+        .collect()
+}
+
 fn fork_project(project_name: &str) -> TempDir {
     let temp = TempDir::new().unwrap();
 
-    let project_path: PathBuf = [env!("CARGO_MANIFEST_DIR"), "resources", "tests", project_name]
-        .iter()
-        .collect();
-    temp.copy_from(project_path, &["*.rs", "*.toml"]).unwrap();
+    temp.copy_from(project_path(project_name), &["*.rs", "*.toml"])
+        .unwrap();
 
     temp
 }
@@ -117,12 +121,10 @@ mod simple_project {
 
         assert.success();
 
-        let project_path: PathBuf =
-            [env!("CARGO_MANIFEST_DIR"), "resources", "tests", "simple_project"]
-                .iter()
-                .collect();
-
-        assert!(toml_files_equal(temp.child("Cargo.toml").path(), project_path.join("Cargo.toml")));
+        assert!(toml_files_equal(
+            temp.child("Cargo.toml").path(),
+            project_path("simple_project").join("Cargo.toml")
+        ));
         temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
     }
 
@@ -141,12 +143,10 @@ mod simple_project {
 
         assert.success();
 
-        let project_path: PathBuf =
-            [env!("CARGO_MANIFEST_DIR"), "resources", "tests", "simple_project"]
-                .iter()
-                .collect();
-
-        assert!(toml_files_equal(temp.child("Cargo.toml").path(), project_path.join("Cargo.toml")));
+        assert!(toml_files_equal(
+            temp.child("Cargo.toml").path(),
+            project_path("simple_project").join("Cargo.toml")
+        ));
         temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
     }
 
@@ -202,9 +202,7 @@ mod workspace {
         C: IntoIterator<Item = &'a str>,
         U: IntoIterator<Item = &'b str>,
     {
-        let project_path: PathBuf = [env!("CARGO_MANIFEST_DIR"), "resources", "tests", "workspace"]
-            .iter()
-            .collect();
+        let project_path = project_path("workspace");
 
         for package in changed {
             assert!(toml_files_equal(
