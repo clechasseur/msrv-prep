@@ -40,6 +40,7 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
         with:
           toolchain: ${{ matrix.toolchain }}
+          cache: false
 
       - name: Setup cross-compilation tools
         uses: taiki-e/setup-cross-toolchain-action@c31d54d08f2ab1b6c35447b32b3f0dcb829a5b4f
