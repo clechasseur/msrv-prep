@@ -19,6 +19,9 @@ categories = [ "command-line-utilities", "development-tools::cargo-plugins", "de
 
 include = [ "src/**/*", "tests/**/*", "resources/**/*", "Cargo.lock", "Cargo.toml", "LICENSE", "README.md" ]
 
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
 [[bin]]
 name = "cargo-msrv-unprep"
 path = "src/bin/cargo_msrv_unprep.rs"
