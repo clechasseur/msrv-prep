@@ -93,17 +93,17 @@ msrv-minimal: (prep "--manifest-backup-suffix .msrv-prep.outer.bak") && (unprep 
     {{cargo}} msrv -- just _check-minimal-only
 
 # Run `cargo msrv` with `cargo check`
-msrv:
-    {{cargo}} msrv -- just check
+msrv *extra_args:
+    {{cargo}} msrv -- just check {{extra_args}}
 
 # Perform `cargo publish` dry-run
 test-package *extra_args:
     {{cargo}} publish --dry-run {{extra_args}}
 
-# Run `cargo msrv-prep` (using local binary)
+# Run `cargo msrv-prep` on workspace
 prep *extra_args:
-    {{cargo}} run --bin cargo-msrv-prep -- msrv-prep {{extra_args}}
+    {{cargo}} msrv-prep --workspace {{extra_args}}
 
-# Run `cargo msrv-unprep` (using local binary)
+# Run `cargo msrv-unprep` on workspace
 unprep *extra_args:
-    {{cargo}} run --bin cargo-msrv-unprep -- msrv-unprep {{extra_args}}
+    {{cargo}} msrv-unprep --workspace {{extra_args}}

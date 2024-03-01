@@ -82,10 +82,10 @@ jobs:
           prefix-key: v5-rust
           key: all-features-${{ matrix.all-features }}-msrv-pins-files-${{ hashFiles('**/msrv-pins.toml') }}
 
-      - name: Install just, cargo-hack and cargo-minimal-versions
+      - name: Install required tools
         uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
         with:
-          tool: just,cargo-hack,cargo-minimal-versions
+          tool: just,cargo-hack,cargo-minimal-versions,cargo-msrv-prep
 
       - name: Run checks using cargo-minimal-versions
         run: just all_features=${{ matrix.all-features }} check-minimal
