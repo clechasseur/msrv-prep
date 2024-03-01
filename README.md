@@ -85,7 +85,7 @@ Here's an example of a GitHub workflow to perform this validation in your CI.
 This workflow uses [`taiki-e/install-action`](https://github.com/taiki-e/install-action) to install the required tools.
 
 ```yaml
-name: CI
+name: MSRV check
 
 on: [push]
 
