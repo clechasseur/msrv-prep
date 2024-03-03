@@ -21,7 +21,7 @@ impl TryFrom<&CommonArgs> for Metadata {
     type Error = crate::Error;
 
     fn try_from(value: &CommonArgs) -> Result<Self, Self::Error> {
-        let metadata = value.manifest.metadata().no_deps().exec()?;
+        let metadata = value.manifest.metadata().exec()?;
 
         let (selected_packages, _) = value.workspace.partition_packages(&metadata);
         let selected_packages: Vec<_> = selected_packages.into_iter().cloned().collect();
