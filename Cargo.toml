@@ -29,7 +29,7 @@ path = "src/bin/cargo_msrv_unprep.rs"
 [dependencies]
 cargo_metadata = "0.18.1"
 clap = { version = "4.5.1", features = ["cargo", "derive"] }
-clap-cargo = { version = "0.14.0", features = ["cargo_metadata"] }
+clap-cargo = { version = "0.13.0", features = ["cargo_metadata"] }
 clap-verbosity-flag = "2.2.0"
 env_logger = "0.11.2"
 log = "0.4.21"
