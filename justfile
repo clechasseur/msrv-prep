@@ -83,18 +83,21 @@ minimize:
     cargo +nightly update -Z minimal-versions
 
 # Run `cargo minimal-versions check` on workspace
-check-minimal: prep _check-minimal-only unprep
+check-minimal: prep _check-minimal-only && (_rimraf "target-minimal") unprep
 
-_check-minimal-only:
-    {{cargo}} minimal-versions check --workspace --lib --bins {{all_features_flag}} {{message_format_flag}}
+_check-minimal-only: (_rimraf "target-minimal")
+    {{cargo}} minimal-versions check --target-dir target-minimal --workspace --lib --bins {{all_features_flag}} {{message_format_flag}}
 
 # Run `cargo msrv` with `cargo minimal-versions check`
-msrv-minimal: (prep "--manifest-backup-suffix .msrv-prep.outer.bak") && (unprep "--manifest-backup-suffix .msrv-prep.outer.bak")
+msrv-minimal: (prep "--manifest-backup-suffix .msrv-prep.outer.bak") && (_rimraf "target-minimal") (unprep "--manifest-backup-suffix .msrv-prep.outer.bak")
     {{cargo}} msrv -- just _check-minimal-only
 
 # Run `cargo msrv` with `cargo check`
-msrv *extra_args:
-    {{cargo}} msrv -- just check {{extra_args}}
+msrv *extra_args: && (_rimraf "target-msrv")
+    {{cargo}} msrv -- just _msrv-check {{extra_args}}
+
+_msrv-check *extra_args: (_rimraf "target-msrv")
+    just check --target-dir target-msrv {{extra_args}}
 
 # Perform `cargo publish` dry-run
 test-package *extra_args:
@@ -107,3 +110,16 @@ prep *extra_args:
 # Run `cargo msrv-unprep` on workspace
 unprep *extra_args:
     {{cargo}} msrv-unprep --workspace {{extra_args}}
+
+# ----- Utilities -----
+
+@_rimraf target_dir:
+    {{ if path_exists(target_dir) == "true" { "just _rimraf-it '" + target_dir + "'" } else { "" } }}
+
+[unix]
+@_rimraf-it target_dir:
+    rm -rf '{{target_dir}}'
+
+[windows]
+@_rimraf-it target_dir:
+    Remove-Item "{{target_dir}}" -Recurse
