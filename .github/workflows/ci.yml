@@ -141,7 +141,8 @@ jobs:
 
   validate-legacy-support:
     # Version 1.0.0 used to work on Rust 1.71.0+ only because of the way `clap-cargo` worked.
-    # This job will validate that once built, the resulting binary works on Rust 1.70-.
+    # This job will validate that once built, the resulting binary works on Rust 1.70-
+    # (as long as you don't use the default packages option).
     name: Validate pre-1.71 support
     runs-on: ubuntu-latest
     steps:
@@ -163,7 +164,7 @@ jobs:
         run: cargo install --path . --force
 
       - name: Run with Rust 1.63
-        run: cargo +1.63.0 msrv-prep --workspace --dry-run -vvvv
+        run: cargo +1.63.0 msrv-prep --manifest-path ./resources/tests/cargo-msrv-prep/simple_project/Cargo.toml --workspace --dry-run -vvvv
 
   tarpaulin:
     # Note: there seems to be an issue in `cargo-tarpaulin` when using Rust 1.75.0 or later - it reports some missing line coverage.
