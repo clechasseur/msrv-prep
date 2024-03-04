@@ -139,6 +139,32 @@ jobs:
       - name: Run tests
         run: just all_features=${{ matrix.all-features }} test
 
+  validate-legacy-support:
+    # Version 1.0.0 used to work on Rust 1.71.0+ only because of the way `clap-cargo` worked.
+    # This job will validate that once built, the resulting binary works on Rust 1.70-.
+    name: Validate pre-1.71 support
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+
+      - name: Install Rust toolchain 1.63.0
+        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
+        with:
+          toolchain: 1.63.0
+          cache: false
+
+      - name: Install Rust stable toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
+        with:
+          toolchain: stable
+
+      - name: Build and install
+        run: cargo install --path . --force
+
+      - name: Run with Rust 1.63
+        run: cargo +1.63.0 msrv-prep --workspace --dry-run -vvvv
+
   tarpaulin:
     # Note: there seems to be an issue in `cargo-tarpaulin` when using Rust 1.75.0 or later - it reports some missing line coverage.
     # I've entered an issue: https://github.com/xd009642/tarpaulin/issues/1438
