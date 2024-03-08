@@ -34,7 +34,7 @@ clap = { version = "4.5.1", features = ["cargo", "derive"] }
 # to propose a change to clap-cargo to lift that restriction.
 clap-cargo = { version = "0.13.0", features = ["cargo_metadata"] }
 clap-verbosity-flag = "2.2.0"
-env_logger = "0.11.2"
+env_logger = "0.11.3"
 log = "0.4.21"
 mockall_double = "0.3.1"
 thiserror = "1.0.57"
