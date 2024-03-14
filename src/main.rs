@@ -60,7 +60,7 @@ use cargo_msrv_prep::{
 };
 use clap::{crate_name, Args, Parser};
 use log::{debug, info, trace};
-use toml_edit::Document;
+use toml_edit::DocumentMut;
 
 #[mockall_double::double]
 use crate::mockable::fs as mockable_fs;
@@ -161,7 +161,7 @@ fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
 
         let manifest_text = fs::read_to_string(&package.manifest_path)
             .with_io_context(|| format!("reading manifest of package {}", package.name))?;
-        let mut manifest = manifest_text.parse::<Document>()?;
+        let mut manifest = manifest_text.parse::<DocumentMut>()?;
 
         let rust_version_removed = if !args.no_remove_rust_version {
             let removed = remove_rust_version(&mut manifest);

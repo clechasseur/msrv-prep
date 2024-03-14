@@ -42,7 +42,7 @@ fn merge_toml_array(destination: &mut ArrayOfTables, source: &ArrayOfTables) {
 #[cfg(test)]
 mod tests {
     use indoc::indoc;
-    use toml_edit::{value, Datetime, Document, Value};
+    use toml_edit::{value, Datetime, DocumentMut, ImDocument, Value};
 
     use super::*;
 
@@ -52,7 +52,7 @@ mod tests {
             [table]
             was_already_there = "hello!" # comment
         "#}
-        .parse::<Document>()
+        .parse::<DocumentMut>()
         .unwrap();
         let destination_table = destination["table"].as_table_mut().unwrap();
 
@@ -90,16 +90,15 @@ mod tests {
             [table]
             was_already_there = "hello!" # comment
         "#}
-        .parse::<Document>()
+        .parse::<DocumentMut>()
         .unwrap();
 
         let source = indoc! {r#"
             [table]
             life = 42
             hangar = "23"
-        "#}
-        .parse::<Document>()
-        .unwrap();
+        "#};
+        let source = ImDocument::parse(source).unwrap();
 
         merge_toml(destination.entry("table"), &source["table"]);
 
@@ -118,7 +117,7 @@ mod tests {
             [[tables]]
             was_already_there = "hello!" # comment
         "#}
-        .parse::<Document>()
+        .parse::<DocumentMut>()
         .unwrap();
 
         let source = indoc! {r#"
@@ -127,9 +126,8 @@ mod tests {
             [[tables]]
             hangar = "23"
             cool = true
-        "#}
-        .parse::<Document>()
-        .unwrap();
+        "#};
+        let source = ImDocument::parse(source).unwrap();
 
         merge_toml(destination.entry("tables"), &source["tables"]);
 
@@ -153,7 +151,7 @@ mod tests {
             will_be_overwritten = "alas, poor Yorick"
             will_be_removed = "salut"
         "#}
-        .parse::<Document>()
+        .parse::<DocumentMut>()
         .unwrap();
 
         let source = indoc! {r#"
@@ -165,9 +163,8 @@ mod tests {
 
             [[tables]]
             always = [7, 11]
-        "#}
-        .parse::<Document>()
-        .unwrap();
+        "#};
+        let source = ImDocument::parse(source).unwrap();
 
         merge_toml(destination.entry("table"), &source["table"]);
         merge_toml(destination.entry("tables"), &source["tables"]);
@@ -199,7 +196,7 @@ mod tests {
             [target.'cfg(windows)'.dependencies]
             win32_foo = "1.0.0"
         "#}
-        .parse::<Document>()
+        .parse::<DocumentMut>()
         .unwrap();
 
         let source = indoc! {r#"
@@ -212,9 +209,8 @@ mod tests {
 
             [target.'cfg(beos)'.dependencies]
             beos_foo = "1.0.0"
-        "#}
-        .parse::<Document>()
-        .unwrap();
+        "#};
+        let source = ImDocument::parse(source).unwrap();
 
         merge_toml(destination.entry("dependencies"), &source["dependencies"]);
         merge_toml(destination.entry("target"), &source["target"]);

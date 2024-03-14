@@ -88,7 +88,7 @@ mod tests {
 
     mod merge_msrv_dependencies {
         use indoc::indoc;
-        use toml_edit::Document;
+        use toml_edit::{DocumentMut, ImDocument};
 
         use super::*;
 
@@ -104,16 +104,15 @@ mod tests {
                 [build-dependencies]
                 rustc_version = "0.4.0"
             "#}
-            .parse::<Document>()
+            .parse::<DocumentMut>()
             .unwrap();
 
             let msrv_dependencies = indoc! {r#"
                 [dependencies]
                 thiserror = "1.0.0"
                 toml_edit = "0.22.0"
-            "#}
-            .parse::<Document>()
-            .unwrap();
+            "#};
+            let msrv_dependencies = ImDocument::parse(msrv_dependencies).unwrap();
 
             assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
@@ -144,15 +143,14 @@ mod tests {
                 [build-dependencies]
                 rustc_version = "0.4.0"
             "#}
-            .parse::<Document>()
+            .parse::<DocumentMut>()
             .unwrap();
 
             let msrv_dependencies = indoc! {r#"
                 [build-dependencies]
                 cargo_metadata = "0.18.0"
-            "#}
-            .parse::<Document>()
-            .unwrap();
+            "#};
+            let msrv_dependencies = ImDocument::parse(msrv_dependencies).unwrap();
 
             assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
@@ -188,7 +186,7 @@ mod tests {
                 [target.'cfg(unix)'.build-dependencies]
                 unix_api = "1.0.0"
             "#}
-            .parse::<Document>()
+            .parse::<DocumentMut>()
             .unwrap();
 
             let msrv_dependencies = indoc! {r#"
@@ -197,9 +195,8 @@ mod tests {
     
                 [target.'cfg(unix)'.build-dependencies]
                 another_unix_api = "2.0.0"
-            "#}
-            .parse::<Document>()
-            .unwrap();
+            "#};
+            let msrv_dependencies = ImDocument::parse(msrv_dependencies).unwrap();
 
             assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
@@ -230,20 +227,19 @@ mod tests {
             let mut manifest = indoc! {r#"
                 target = "what"
             "#}
-            .parse::<Document>()
+            .parse::<DocumentMut>()
             .unwrap();
 
             let msrv_dependencies = indoc! {r#"
                 [target.'cfg(unix)'.dependencies]
                 unix_specific_crate = "1.0.0"
-            "#}
-            .parse::<Document>()
-            .unwrap();
+            "#};
+            let msrv_dependencies = ImDocument::parse(msrv_dependencies).unwrap();
 
             assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
             let expected = indoc! {r#"
-                [target.'cfg(unix)'.dependencies]
+                [target."cfg(unix)".dependencies]
                 unix_specific_crate = "1.0.0"
             "#};
             assert_eq!(manifest.to_string(), expected);
