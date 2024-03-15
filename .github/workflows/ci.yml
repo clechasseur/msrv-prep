@@ -24,10 +24,9 @@ jobs:
         with:
           toolchain: stable
           components: clippy
-          cache: false
 
       - name: Run clippy
-        uses: clechasseur/rs-clippy-check@c624f914a0031ab286c106776f889357ba7e799a
+        uses: clechasseur/rs-clippy-check@d76e9da3cd0e64868fdc27e2277268190cd3af59
         with:
           args: --workspace --all-targets ${{ matrix.all-features && '--all-features' || '' }} -- -D warnings
 
@@ -46,7 +45,7 @@ jobs:
           cache: false
 
       - name: Run Rustfmt
-        uses: clechasseur/rs-fmt-check@e4f3eb51a38452b7963c14758a8f0f9ad52a84d4
+        uses: clechasseur/rs-fmt-check@8fe30e561f794475f8eb680dd7131791a0f32c67
         with:
           args: --all
 
@@ -83,7 +82,7 @@ jobs:
           key: all-features-${{ matrix.all-features }}-msrv-pins-files-${{ hashFiles('**/msrv-pins.toml') }}
 
       - name: Install required tools
-        uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
+        uses: taiki-e/install-action@4abee32ddd6d3482e57ba21814317997e6268efe
         with:
           tool: just,cargo-hack,cargo-minimal-versions,cargo-msrv-prep
 
@@ -129,7 +128,7 @@ jobs:
           key: ignore-lock-${{ matrix.ignore-lock }}-all-features-${{ matrix.all-features }}
 
       - name: Install just
-        uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
+        uses: taiki-e/install-action@4abee32ddd6d3482e57ba21814317997e6268efe
         with:
           tool: just
 
@@ -188,17 +187,17 @@ jobs:
           cache-targets: false
 
       - name: Install cargo-tarpaulin
-        uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
+        uses: taiki-e/install-action@4abee32ddd6d3482e57ba21814317997e6268efe
         with:
           tool: cargo-tarpaulin
 
       - name: Run cargo-tarpaulin
-        uses: clechasseur/rs-cargo@7f70e375af32a065d31856c21fd53b638d38e057
+        uses: clechasseur/rs-cargo@801899018a9a4558d01dc74fe3943a6e2ae0f98c
         with:
           command: tarpaulin
 
       - name: Upload code coverage results to codecov.io
-        uses: codecov/codecov-action@e0b68c6749509c5f83f984dd99a76a1c1a231044
+        uses: codecov/codecov-action@54bcd8715eee62d40e33596ef5e8f0f48dbbccab
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
@@ -240,7 +239,7 @@ jobs:
           cache-targets: false
 
       - name: Install just
-        uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
+        uses: taiki-e/install-action@4abee32ddd6d3482e57ba21814317997e6268efe
         with:
           tool: just
 
@@ -265,13 +264,8 @@ jobs:
         with:
           cache-targets: false
 
-      - name: Install just
-        uses: taiki-e/install-action@0dffe805566eb5f21aa682f9a43f6fbac7282dbe
-        with:
-          tool: just
-
       - name: Perform publish dry-run
-        uses: clechasseur/rs-cargo@7f70e375af32a065d31856c21fd53b638d38e057
+        uses: clechasseur/rs-cargo@801899018a9a4558d01dc74fe3943a6e2ae0f98c
         with:
           command: publish
           args: --dry-run
