@@ -1,13 +1,9 @@
 set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
-toolchain := ''
-trimmed_toolchain := trim(toolchain)
+toolchain := ""
+tool := "cargo"
 
-cargo := if trimmed_toolchain != "" {
-    "cargo +" + trimmed_toolchain
-} else {
-    "cargo"
-}
+cargo := tool + (if toolchain != "" { " +" + toolchain } else { "" })
 
 all_features := "true"
 all_features_flag := if all_features == "true" { "--all-features" } else { "" }
@@ -18,6 +14,9 @@ all_targets_flag := if all_targets == "true" { "--all-targets" } else { "" }
 message_format := ""
 message_format_flag := if message_format != "" { "--message-format " + message_format } else { "" }
 
+target_tuple := ""
+target_tuple_flag := if target_tuple != "" { "--target " + target_tuple } else { "" }
+
 [private]
 default:
     @just --list
@@ -27,7 +26,7 @@ tidy: clippy fmt
 
 # Run clippy on workspace files
 clippy:
-    {{cargo}} clippy --workspace {{all_targets_flag}} {{all_features_flag}} -- -D warnings
+    {{cargo}} clippy --workspace {{all_targets_flag}} {{all_features_flag}} {{target_tuple_flag}} -- -D warnings
 
 # Run rustfmt on workspace files
 fmt:
@@ -35,15 +34,15 @@ fmt:
 
 # Run `cargo check` on workspace
 check *extra_args:
-    {{cargo}} check --workspace {{all_targets_flag}} {{all_features_flag}} {{message_format_flag}} {{extra_args}}
+    {{cargo}} check --workspace {{all_targets_flag}} {{all_features_flag}} {{message_format_flag}} {{target_tuple_flag}} {{extra_args}}
 
 # Run `cargo build` on workspace
 build *extra_args:
-    {{cargo}} build --workspace {{all_targets_flag}} {{all_features_flag}} {{message_format_flag}} {{extra_args}}
+    {{cargo}} build --workspace {{all_targets_flag}} {{all_features_flag}} {{message_format_flag}} {{target_tuple_flag}} {{extra_args}}
 
 # Run `cargo test` on workspace
 test *extra_args:
-    {{cargo}} test --workspace {{all_features_flag}} {{message_format_flag}} {{extra_args}}
+    {{cargo}} test --workspace {{all_features_flag}} {{message_format_flag}} {{target_tuple_flag}} {{extra_args}}
 
 # Run `cargo update` to update dependencies in Cargo.lock
 update *extra_args:
@@ -90,14 +89,14 @@ _check-minimal-only: (_rimraf "target-minimal")
 
 # Run `cargo msrv` with `cargo minimal-versions check`
 msrv-minimal: (prep "--manifest-backup-suffix .msrv-prep.outer.bak") && (_rimraf "target-minimal") (unprep "--manifest-backup-suffix .msrv-prep.outer.bak")
-    {{cargo}} msrv -- just _check-minimal-only
+    {{cargo}} msrv -- just all_features="{{all_features}}" message_format="{{message_format}}" target_tuple="{{target_tuple}}" _check-minimal-only
 
 # Run `cargo msrv` with `cargo check`
 msrv *extra_args: && (_rimraf "target-msrv")
-    {{cargo}} msrv -- just _msrv-check {{extra_args}}
+    {{cargo}} msrv -- just all_features="{{all_features}}" all_targets="{{all_targets}}" message_format="{{message_format}}" target_tuple="{{target_tuple}}" _msrv-check {{extra_args}}
 
 _msrv-check *extra_args: (_rimraf "target-msrv")
-    just check --target-dir target-msrv {{extra_args}}
+    just all_features="{{all_features}}" all_targets="{{all_targets}}" message_format="{{message_format}}" target_tuple="{{target_tuple}}" check --target-dir target-msrv {{extra_args}}
 
 # Perform `cargo publish` dry-run
 test-package *extra_args:
