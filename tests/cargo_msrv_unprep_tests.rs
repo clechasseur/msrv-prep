@@ -17,7 +17,7 @@ fn project_path(project_name: &str) -> PathBuf {
 fn fork_project(project_name: &str) -> TempDir {
     let temp = TempDir::new().unwrap();
 
-    temp.copy_from(project_path(project_name), &["*.rs", "*.toml", "*.bak"])
+    temp.copy_from(project_path(project_name), &["*.rs", "*.toml", "*.lock", "*.bak"])
         .unwrap();
 
     temp
@@ -35,6 +35,9 @@ fn validate_unprep_result(temp_path: &ChildPath, project_path: &ChildPath) {
     }
     temp_path
         .child("Cargo.toml.msrv-prep.bak")
+        .assert(missing());
+    temp_path
+        .child("Cargo.lock.msrv-prep.bak")
         .assert(missing());
 
     for child in temp_path.read_dir().unwrap() {
@@ -94,6 +97,11 @@ mod custom_values {
             temp.child("Cargo.toml.my-msrv-prep.bak").path(),
         )
         .unwrap();
+        fs::rename(
+            temp.child("Cargo.lock.msrv-prep.bak").path(),
+            temp.child("Cargo.lock.my-msrv-prep.bak").path(),
+        )
+        .unwrap();
 
         Command::new(MSRV_UNPREP_BIN_EXE)
             .arg("msrv-unprep")
@@ -108,6 +116,10 @@ mod custom_values {
         ChildPath::new(project_path("simple_project"))
             .child("Cargo.toml.msrv-prep.bak")
             .assert(eq_file(temp.child("Cargo.toml").path()));
+        ChildPath::new(project_path("simple_project"))
+            .child("Cargo.lock.msrv-prep.bak")
+            .assert(eq_file(temp.child("Cargo.lock").path()));
         temp.child("Cargo.toml.my-msrv-prep.bak").assert(missing());
+        temp.child("Cargo.lock.my-msrv-prep.bak").assert(missing());
     }
 }
