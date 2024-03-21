@@ -16,7 +16,7 @@ fn project_path(project_name: &str) -> PathBuf {
 fn fork_project(project_name: &str) -> TempDir {
     let temp = TempDir::new().unwrap();
 
-    temp.copy_from(project_path(project_name), &["*.rs", "*.toml"])
+    temp.copy_from(project_path(project_name), &["*.rs", "*.toml", "*.lock"])
         .unwrap();
 
     temp
@@ -40,7 +40,7 @@ mod simple_project {
     use assert_cmd::Command;
     use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
-    use predicates::path::missing;
+    use predicates::path::{eq_file, missing};
 
     use super::*;
 
@@ -59,6 +59,10 @@ mod simple_project {
             temp.child("expected").child("all.toml").path(),
             temp.child("Cargo.toml").path()
         ));
+        temp.child("Cargo.toml.msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.toml")));
+        temp.child("Cargo.lock.msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.lock")));
     }
 
     #[test_log::test]
@@ -79,6 +83,10 @@ mod simple_project {
                 .path(),
             temp.child("Cargo.toml").path()
         ));
+        temp.child("Cargo.toml.msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.toml")));
+        temp.child("Cargo.lock.msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.lock")));
     }
 
     #[test_log::test]
@@ -99,6 +107,10 @@ mod simple_project {
                 .path(),
             temp.child("Cargo.toml").path()
         ));
+        temp.child("Cargo.toml.msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.toml")));
+        temp.child("Cargo.lock.msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.lock")));
     }
 
     #[test_log::test]
@@ -118,6 +130,7 @@ mod simple_project {
             project_path("simple_project").join("Cargo.toml")
         ));
         temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
+        temp.child("Cargo.lock.msrv-prep.bak").assert(missing());
     }
 
     #[test_log::test]
@@ -138,6 +151,7 @@ mod simple_project {
             project_path("simple_project").join("Cargo.toml")
         ));
         temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
+        temp.child("Cargo.lock.msrv-prep.bak").assert(missing());
     }
 
     #[test_log::test]
@@ -153,6 +167,23 @@ mod simple_project {
             .failure();
 
         assert_eq!("", fs::read_to_string(temp.child("Cargo.toml.msrv-prep.bak").path()).unwrap());
+        temp.child("Cargo.lock.msrv-prep.bak").assert(missing());
+    }
+
+    #[test_log::test]
+    fn fail_because_backup_lockfile_already_exists() {
+        let temp = fork_project("simple_project");
+        fs::write(temp.child("Cargo.lock.msrv-prep.bak"), b"").unwrap();
+
+        Command::new(MSRV_PREP_BIN_EXE)
+            .current_dir(temp.path())
+            .arg("msrv-prep")
+            .arg("-vvvv")
+            .assert()
+            .failure();
+
+        assert_eq!("", fs::read_to_string(temp.child("Cargo.lock.msrv-prep.bak").path()).unwrap());
+        temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
     }
 
     #[test_log::test]
@@ -172,6 +203,33 @@ mod simple_project {
             temp.child("expected").child("all.toml").path(),
             temp.child("Cargo.toml").path()
         ));
+        temp.child("Cargo.toml.msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.toml")));
+        temp.child("Cargo.lock.msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.lock")));
+    }
+
+    #[test_log::test]
+    fn overwrite_existing_lockfile_backup() {
+        let temp = fork_project("simple_project");
+        fs::write(temp.child("Cargo.lock.msrv-prep.bak"), b"").unwrap();
+
+        Command::new(MSRV_PREP_BIN_EXE)
+            .current_dir(temp.path())
+            .arg("msrv-prep")
+            .arg("--force")
+            .arg("-vvvv")
+            .assert()
+            .success();
+
+        assert!(toml_files_equal(
+            temp.child("expected").child("all.toml").path(),
+            temp.child("Cargo.toml").path()
+        ));
+        temp.child("Cargo.toml.msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.toml")));
+        temp.child("Cargo.lock.msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.lock")));
     }
 
     #[test_log::test]
@@ -195,10 +253,12 @@ mod simple_project {
             temp.child("expected").child("all.toml").path(),
             temp.child("Cargo.toml")
         ));
-        assert!(toml_files_equal(
-            temp.child("Cargo.toml.my-msrv-prep.bak").path(),
-            project_path("simple_project").join("Cargo.toml")
-        ));
+        temp.child("Cargo.toml.my-msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.toml")));
+        temp.child("Cargo.lock.my-msrv-prep.bak")
+            .assert(eq_file(project_path("simple_project").join("Cargo.lock")));
+        temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
+        temp.child("Cargo.lock.msrv-prep.bak").assert(missing());
     }
 }
 
@@ -206,7 +266,7 @@ mod workspace {
     use assert_cmd::Command;
     use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
-    use predicates::path::missing;
+    use predicates::path::{eq_file, missing};
 
     use super::*;
 
@@ -222,10 +282,18 @@ mod workspace {
                 temp.child(package).child("expected.toml").path(),
                 temp.child(package).child("Cargo.toml").path()
             ));
-            assert!(toml_files_equal(
-                temp.child(package).child("Cargo.toml.msrv-prep.bak").path(),
-                project_path.join(package).join("Cargo.toml")
-            ));
+            temp.child(package)
+                .child("Cargo.toml.msrv-prep.bak")
+                .assert(eq_file(project_path.join(package).join("Cargo.toml")));
+            if project_path.join(package).join("Cargo.lock").is_file() {
+                temp.child(package)
+                    .child("Cargo.lock.msrv-prep.bak")
+                    .assert(eq_file(project_path.join(package).join("Cargo.lock")));
+            } else {
+                temp.child(package)
+                    .child("Cargo.lock.msrv-prep.bak")
+                    .assert(missing());
+            }
         }
 
         for package in unchanged {
@@ -235,6 +303,9 @@ mod workspace {
             ));
             temp.child(package)
                 .child("Cargo.toml.msrv-prep.bak")
+                .assert(missing());
+            temp.child(package)
+                .child("Cargo.lock.msrv-prep.bak")
                 .assert(missing());
         }
     }
@@ -370,5 +441,6 @@ mod no_changes {
             temp.child("Cargo.toml").path()
         ));
         temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
+        temp.child("Cargo.lock.msrv-prep.bak").assert(missing());
     }
 }
