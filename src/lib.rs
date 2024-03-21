@@ -34,6 +34,9 @@ pub const DEFAULT_MANIFEST_BACKUP_SUFFIX: &str = ".msrv-prep.bak";
 /// Field in the `package` section of a manifest that stores the package's MSRV.
 pub const RUST_VERSION_SPECIFIER: &str = "rust-version";
 
+/// Extension used for lockfiles.
+pub const LOCKFILE_EXT: &str = "lock";
+
 /// Removes the `rust-version` field from a Cargo manifest's
 /// `package` section, if present.
 ///
@@ -102,35 +105,30 @@ pub fn maybe_merge_msrv_dependencies(
 /// Backs up a manifest file by copying it to a new file next to it.
 ///
 /// The new file's name is the same as the manifest, with the given backup suffix appended.
+///
+/// If a lockfile exists next to the manifest, it is also backed up in a similar manner.
 pub fn backup_manifest(manifest_path: &Utf8Path, backup_suffix: &str, force: bool) -> Result<()> {
     trace!(
-        "Entering `backup_manifest` (manifest_path: '{}', backup_suffix: '{}')",
+        "Entering `backup_manifest` (manifest_path: '{}', backup_suffix: '{}', force: {})",
         manifest_path,
-        backup_suffix
+        backup_suffix,
+        force,
     );
 
-    let backup_path = get_backup_path(manifest_path, backup_suffix)?;
-    debug!("Backup path: {}", backup_path);
+    let lockfile_path = manifest_path.with_extension(LOCKFILE_EXT);
 
-    if backup_path.exists() {
-        if force {
-            info!(
-                "Manifest backup file already exists at '{}'; will be overwritten (forced backup)",
-                backup_path
-            );
-        } else {
-            error!("Manifest backup file already exists at '{}'; aborting", backup_path);
+    let manifest_backup_path = get_backup_path(manifest_path, backup_suffix)?;
+    let lockfile_backup_path = get_backup_path(&lockfile_path, backup_suffix)?;
 
-            return Err(Error::BackupManifestAlreadyExists(backup_path));
-        }
+    validate_backup_file(&manifest_backup_path, force)?;
+    if lockfile_path.is_file() {
+        validate_backup_file(&lockfile_backup_path, force)?;
     }
 
-    info!("Backing up manifest at '{}' to '{}'", manifest_path, backup_path);
-    mockable_fs::copy(manifest_path, &backup_path)
-        .map(|_| ())
-        .with_io_context(|| {
-            format!("backing up manifest at '{}' to '{}'", manifest_path, backup_path)
-        })?;
+    backup_file(manifest_path, &manifest_backup_path)?;
+    if lockfile_path.is_file() {
+        backup_file(&lockfile_path, &lockfile_backup_path)?;
+    }
 
     trace!("Exiting `backup_manifest`");
     Ok(())
@@ -140,6 +138,8 @@ pub fn backup_manifest(manifest_path: &Utf8Path, backup_suffix: &str, force: boo
 ///
 /// The backup manifest must've been created by calling [`backup_manifest`]
 /// (passing it the same `backup_suffix` value).
+///
+/// If a lockfile was also backed up next to the manifest, it is also restored.
 pub fn maybe_restore_manifest(manifest_path: &Utf8Path, backup_suffix: &str) -> Result<()> {
     trace!(
         "Entering `maybe_restore_manifest` (manifest_path: '{}', backup_suffix: '{}')",
@@ -147,27 +147,71 @@ pub fn maybe_restore_manifest(manifest_path: &Utf8Path, backup_suffix: &str) -> 
         backup_suffix
     );
 
-    let backup_path = get_backup_path(manifest_path, backup_suffix)?;
-    debug!("Backup path: {}", backup_path);
+    let lockfile_path = manifest_path.with_extension(LOCKFILE_EXT);
 
-    if backup_path.is_file() {
-        info!("Manifest backup file found at '{}'; restoring to '{}'", backup_path, manifest_path);
+    maybe_restore_file(manifest_path, backup_suffix)?;
 
-        mockable_fs::rename(&backup_path, manifest_path).with_io_context(|| {
-            format!("restoring manifest backup from '{}' to '{}'", backup_path, manifest_path)
-        })?;
+    if lockfile_path.is_file() {
+        maybe_restore_file(&lockfile_path, backup_suffix)?;
     }
 
     trace!("Exiting `maybe_restore_manifest`");
     Ok(())
 }
 
-fn get_backup_path(manifest_path: &Utf8Path, backup_suffix: &str) -> Result<Utf8PathBuf> {
-    manifest_path
+fn maybe_restore_file(file_path: &Utf8Path, backup_suffix: &str) -> Result<()> {
+    trace!(
+        "Entering `maybe_restore_file` (file_path: '{}', backup_suffix: '{}')",
+        file_path,
+        backup_suffix
+    );
+
+    let backup_path = get_backup_path(file_path, backup_suffix)?;
+    debug!("Backup path: {}", backup_path);
+
+    if backup_path.is_file() {
+        info!("Backup file found at '{}'; restoring to '{}'", backup_path, file_path);
+
+        mockable_fs::rename(&backup_path, file_path).with_io_context(|| {
+            format!("restoring backup from '{}' to '{}'", backup_path, file_path)
+        })?;
+    }
+
+    trace!("Exiting `maybe_restore_file`");
+    Ok(())
+}
+
+fn get_backup_path(file_path: &Utf8Path, backup_suffix: &str) -> Result<Utf8PathBuf> {
+    file_path
         .file_name()
-        .map(|mfn| mfn.to_string() + backup_suffix)
-        .and_then(|bfn| manifest_path.parent().map(|par| par.join(bfn)))
-        .ok_or_else(|| Error::InvalidManifestPath(manifest_path.into()))
+        .map(|name| name.to_string() + backup_suffix)
+        .and_then(|name| file_path.parent().map(|par| par.join(name)))
+        .ok_or_else(|| Error::InvalidPath(file_path.into()))
+}
+
+fn validate_backup_file(backup_path: &Utf8Path, force: bool) -> Result<()> {
+    match (backup_path.is_file(), force) {
+        (true, true) => {
+            info!(
+                "Backup file already exists at '{}'; will be overwritten (forced backup)",
+                backup_path
+            );
+            Ok(())
+        },
+        (true, false) => {
+            error!("Backup file already exists at '{}'; aborting", backup_path);
+
+            Err(Error::BackupFileAlreadyExists(backup_path.into()))
+        },
+        (false, _) => Ok(()),
+    }
+}
+
+fn backup_file(file_path: &Utf8Path, backup_path: &Utf8Path) -> Result<()> {
+    info!("Backing up '{}' to '{}'", file_path, backup_path);
+    mockable_fs::copy(file_path, backup_path)
+        .map(|_| ())
+        .with_io_context(|| format!("backing up '{}' to '{}'", file_path, backup_path))
 }
 
 #[cfg(test)]

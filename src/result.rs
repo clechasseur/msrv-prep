@@ -18,11 +18,11 @@ pub enum Error {
     #[error(transparent)]
     Toml(#[from] TomlError),
 
-    #[error("Invalid manifest path: {0}")]
-    InvalidManifestPath(Utf8PathBuf),
+    #[error("Invalid path: {0}")]
+    InvalidPath(Utf8PathBuf),
 
-    #[error("Backup manifest already exists: {0}")]
-    BackupManifestAlreadyExists(Utf8PathBuf),
+    #[error("Backup file already exists: {0}")]
+    BackupFileAlreadyExists(Utf8PathBuf),
 }
 
 /// Trait used to provide context for I/O errors.

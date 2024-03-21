@@ -8,7 +8,8 @@
 //!   merged with the manifest (see below).
 //!
 //! If this results in a manifest being modified, then the original is backed up
-//! by copying it to a new file next to it.
+//! by copying it to a new file next to it. (If a lockfile is also present, it is
+//! backed up as well.)
 //!
 //! Once MSRV has been determined or verified, this process can be undone (e.g. the original
 //! manifests restored) by calling `cargo msrv-unprep` (see `cargo-msrv-unprep` crate).
@@ -232,7 +233,7 @@ mod tests {
     fn fork_project(project_name: &str) -> TempDir {
         let temp = TempDir::new().unwrap();
 
-        temp.copy_from(project_path(project_name), &["*.rs", "*.toml"])
+        temp.copy_from(project_path(project_name), &["*.rs", "*.toml", "*.lock"])
             .unwrap();
 
         temp
