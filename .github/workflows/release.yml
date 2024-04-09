@@ -34,16 +34,16 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
 
       - name: Install Rust toolchain ${{ matrix.toolchain }}
-        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc
+        uses: actions-rust-lang/setup-rust-toolchain@b113a30d27a8e59c969077c0a0168cc13dab5ffc # v1.8.0
         with:
           toolchain: ${{ matrix.toolchain }}
           cache: false
 
       - name: Setup cross-compilation tools
-        uses: taiki-e/setup-cross-toolchain-action@c31d54d08f2ab1b6c35447b32b3f0dcb829a5b4f
+        uses: taiki-e/setup-cross-toolchain-action@c31d54d08f2ab1b6c35447b32b3f0dcb829a5b4f # v1.20.0
         with:
           target: ${{ matrix.arch }}-${{ matrix.platform }}
 
@@ -56,7 +56,7 @@ jobs:
         if: ${{ matrix.link-self-contained }}
 
       - name: Build binaries and upload to GitHub release
-        uses: taiki-e/upload-rust-binary-action@6eae9d714e13744ede2258c97f4390dd0d88331e
+        uses: taiki-e/upload-rust-binary-action@582c0333888d1fa4c2bd75562fa6873bc19c2560 # v1.19.2
         with:
           bin: cargo-msrv-prep,cargo-msrv-unprep
           token: ${{ secrets.GITHUB_TOKEN }}
