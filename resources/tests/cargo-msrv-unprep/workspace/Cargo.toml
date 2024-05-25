@@ -13,7 +13,7 @@ rustc_version = "0.4.0"
 [package]
 name = "test-workspace"
 version = "0.1.0"
-authors = [ "Charles Lechasseur <shiftingbeard@gmx.com>" ]
+authors = [ "Charles Lechasseur <shiftingbeard@outlook.com>" ]
 edition = "2021"
 
 [target."cfg(windows)".dependencies]
