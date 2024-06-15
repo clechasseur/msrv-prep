@@ -110,7 +110,7 @@ jobs:
       - name: Install Rust minimum supported toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: ${{ matrix.os }}
+          toolchain: ${{ matrix.toolchain }}
           cache: false
   
       # If you want to use the `rust-cache` action, it's probably a good idea to make your cache key
