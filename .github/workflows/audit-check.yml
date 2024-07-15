@@ -19,6 +19,6 @@ jobs:
       - name: Run security audit
         # Note: the action below is a temporary fork of rustsec/audit-check; it could be
         # replaced if, at some point, rustsec/audit-check is updated to use Node 20.
-        uses: clechasseur/rustsec-audit-check@b5ade62a8d38826bb50ca4b8b9bc2a8a97f0d44d
+        uses: clechasseur/rustsec-audit-check@b7dc4ebf0c78ffba0982f75a53d230f48c2a76e9
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
