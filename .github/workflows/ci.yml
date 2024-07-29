@@ -165,10 +165,17 @@ jobs:
           toolchain: stable
 
       - name: Build and install
-        run: cargo install --path . --force
+        uses: clechasseur/rs-cargo@b4ba96880c7600d3b7f6fc6d1b72d88417378320 # v2.0.4
+        with:
+          command: install
+          args: --path . --force
 
       - name: Run with Rust 1.63
-        run: cargo +1.63.0 msrv-prep --manifest-path ./resources/tests/cargo-msrv-prep/simple_project/Cargo.toml --workspace --dry-run -vvvv
+        uses: clechasseur/rs-cargo@b4ba96880c7600d3b7f6fc6d1b72d88417378320 # v2.0.4
+        with:
+          toolchain: 1.63.0
+          command: msrv-prep
+          args: --manifest-path ./resources/tests/cargo-msrv-prep/simple_project/Cargo.toml --workspace --dry-run -vvvv
 
   tarpaulin:
     # Note: there seems to be an issue in `cargo-tarpaulin` when using Rust 1.75.0 or later - it reports some missing line coverage.
