@@ -22,6 +22,10 @@ include = [ "src/**/*", "tests/**/*", "resources/**/*", "Cargo.lock", "Cargo.tom
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = [ "cfg(tarpaulin)", "cfg(tarpaulin_include)" ]
+
 [[bin]]
 name = "cargo-msrv-unprep"
 path = "src/bin/cargo_msrv_unprep.rs"
