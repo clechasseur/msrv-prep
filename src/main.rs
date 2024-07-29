@@ -197,7 +197,7 @@ fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
                     &args.common.manifest_backup_suffix,
                     args.force,
                 )?;
-                mockable_fs::write(&package.manifest_path, &manifest.to_string()).with_io_context(
+                mockable_fs::write(&package.manifest_path, manifest.to_string()).with_io_context(
                     || format!("saving updated manifest content to '{}'", package.manifest_path),
                 )?;
             } else {
