@@ -165,13 +165,13 @@ jobs:
           toolchain: stable
 
       - name: Build and install
-        uses: clechasseur/rs-cargo@b4ba96880c7600d3b7f6fc6d1b72d88417378320 # v2.0.4
+        uses: clechasseur/rs-cargo@34eb9ee3e4186e5c7820a54393fbf081f78bc102 # v2.0.5
         with:
           command: install
           args: --path . --force
 
       - name: Run with Rust 1.63
-        uses: clechasseur/rs-cargo@b4ba96880c7600d3b7f6fc6d1b72d88417378320 # v2.0.4
+        uses: clechasseur/rs-cargo@34eb9ee3e4186e5c7820a54393fbf081f78bc102 # v2.0.5
         with:
           toolchain: 1.63.0
           command: msrv-prep
@@ -206,7 +206,7 @@ jobs:
           tool: cargo-tarpaulin
 
       - name: Run cargo-tarpaulin
-        uses: clechasseur/rs-cargo@b4ba96880c7600d3b7f6fc6d1b72d88417378320 # v2.0.4
+        uses: clechasseur/rs-cargo@34eb9ee3e4186e5c7820a54393fbf081f78bc102 # v2.0.5
         with:
           command: tarpaulin
 
@@ -283,7 +283,7 @@ jobs:
           cache-on-failure: true
 
       - name: Perform publish dry-run
-        uses: clechasseur/rs-cargo@b4ba96880c7600d3b7f6fc6d1b72d88417378320 # v2.0.4
+        uses: clechasseur/rs-cargo@34eb9ee3e4186e5c7820a54393fbf081f78bc102 # v2.0.5
         with:
           command: publish
           args: --dry-run
