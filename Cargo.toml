@@ -41,7 +41,7 @@ clap-verbosity-flag = "2.2.2"
 env_logger = "0.11.5"
 log = "0.4.22"
 mockall_double = "0.3.1"
-thiserror = "1.0.64"
+thiserror = "1.0.65"
 toml_edit = "0.22.22"
 
 [dev-dependencies]
