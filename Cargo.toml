@@ -3,7 +3,7 @@ name = "cargo-msrv-prep"
 version = "2.0.0"
 authors = [ "Charles Lechasseur <shiftingbeard@outlook.com>" ]
 edition = "2021"
-rust-version = "1.74.1"
+rust-version = "1.79.0"
 
 readme = "README.md"
 license = "MIT"
@@ -31,17 +31,18 @@ name = "cargo-msrv-unprep"
 path = "src/bin/cargo_msrv_unprep.rs"
 
 [dependencies]
-cargo_metadata = "0.18.1"
+# Note: we lock ourselves to cargo-metadata 0.18 because of the lock on clap-cargo (see below).
+cargo_metadata = "^0.18.1"
 clap = { version = "4.5.22", features = ["cargo", "derive"] }
 # Note: clap-cargo 0.14 uses a different way of determining default workspace members,
 # but that only works on Rust 1.71+. We'll keep using 0.13 for the time being; I'll try
 # to propose a change to clap-cargo to lift that restriction.
-clap-cargo = { version = "0.13.0", features = ["cargo_metadata"] }
-clap-verbosity-flag = "2.2.3"
+clap-cargo = { version = "^0.13.0", features = ["cargo_metadata"] }
+clap-verbosity-flag = "3.0.1"
 env_logger = "0.11.5"
 log = "0.4.22"
 mockall_double = "0.3.1"
-thiserror = "1.0.69"
+thiserror = "2.0.4"
 toml_edit = "0.22.22"
 
 [dev-dependencies]

@@ -133,5 +133,5 @@ jobs:
 
 ## MSRV of `cargo-msrv-prep`
 
-The MSRV of the `cargo-msrv-prep` tool is Rust **1.74.1**.
+The MSRV of the `cargo-msrv-prep` tool is Rust **1.79.0**.
 This is only important when installing from source (e.g. with `cargo install`) however, since the executable will then work with older Rust versions.
