@@ -44,7 +44,7 @@ It allows running Cargo commands using the unstable [`-Z minimal-versions`](http
 By using this, we can run this to determine our crate's true MSRV:
 
 ```sh
-cargo msrv -- cargo minimal-versions check --workspace --lib --bins --all-features
+cargo msrv find -- cargo minimal-versions check --workspace --lib --bins --all-features
 ```
 
 But there remains another issue: some crates specify erroneous minimum versions for their dependencies; the specified minimum versions are actually _too low_ and don't build.
@@ -70,7 +70,7 @@ Consequently, you can use this tool to determine the true MSRV of your crate wit
 
 ```sh
 cargo msrv-prep --workspace
-cargo msrv -- cargo minimal-versions check --workspace --lib --bins --all-features
+cargo msrv find -- cargo minimal-versions check --workspace --lib --bins --all-features
 cargo msrv-unprep --workspace
 ```
 
