@@ -50,21 +50,29 @@ fn validate_unprep_result(temp_path: &ChildPath, project_path: &ChildPath) {
     }
 }
 
-fn perform_unprep_test(project_name: &str) {
+fn perform_unprep_test(project_name: &str, backup_root_manifest: bool) {
     let temp = fork_project(project_name);
 
-    Command::new(MSRV_UNPREP_BIN_EXE)
+    let mut command = Command::new(MSRV_UNPREP_BIN_EXE);
+    command
         .current_dir(temp.path())
         .arg("msrv-unprep")
         .arg("--workspace")
-        .arg("-vvvv")
-        .assert()
-        .success();
+        .arg("-vvvv");
+    if backup_root_manifest {
+        command.arg("--backup-root-manifest");
+    }
+    command.assert().success();
 
     validate_unprep_result(
         &ChildPath::new(temp.path()),
         &ChildPath::new(project_path(project_name)),
     );
+}
+
+fn perform_unprep_tests(project_name: &str) {
+    perform_unprep_test(project_name, false);
+    perform_unprep_test(project_name, true);
 }
 
 mod default_values {
@@ -74,7 +82,7 @@ mod default_values {
         ($proj_name:ident) => {
             #[test_log::test]
             fn $proj_name() {
-                perform_unprep_test(stringify!($proj_name));
+                perform_unprep_tests(stringify!($proj_name));
             }
         };
     }
