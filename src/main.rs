@@ -57,7 +57,8 @@ use cargo_msrv_prep::common_args::CommonArgs;
 use cargo_msrv_prep::metadata::Metadata;
 use cargo_msrv_prep::result::IoErrorContext;
 use cargo_msrv_prep::{
-    backup_manifest, maybe_merge_msrv_dependencies, remove_rust_version, RUST_VERSION_SPECIFIER,
+    backup_manifest, maybe_merge_msrv_dependencies, remove_rust_version,
+    DEFAULT_MANIFEST_FILE_NAME, RUST_VERSION_SPECIFIER,
 };
 use clap::{crate_name, Args, Parser};
 use log::{debug, info, trace};
@@ -157,6 +158,7 @@ fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
     debug!("Workspace root: {}", metadata.cargo_metadata.workspace_root);
     debug!("Selected packages: {}", metadata.selected_package_names());
 
+    let mut root_manifest_backed_up = false;
     for package in &metadata.selected_packages {
         info!("Preparing manifest '{}' (at '{}')", package.name, package.manifest_path);
 
@@ -206,8 +208,39 @@ fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
                     package.name
                 );
             }
+
+            root_manifest_backed_up = root_manifest_backed_up
+                || package.manifest_path
+                    == metadata
+                        .cargo_metadata
+                        .workspace_root
+                        .join(DEFAULT_MANIFEST_FILE_NAME);
         } else {
             info!("Manifest for '{}' not changed after preparation; skipping", package.name);
+        }
+    }
+
+    if args.common.backup_root_manifest {
+        if !root_manifest_backed_up {
+            if !args.dry_run {
+                info!("Backing up root manifest (at '{}')", metadata.cargo_metadata.workspace_root);
+
+                // Note: this will fail if the root manifest has a non-standard name, but
+                // there doesn't seem to be an easy way to fetch the name of the root
+                // manifest when it doesn't contain a package itself, so we have no choice.
+                backup_manifest(
+                    &metadata
+                        .cargo_metadata
+                        .workspace_root
+                        .join(DEFAULT_MANIFEST_FILE_NAME),
+                    &args.common.manifest_backup_suffix,
+                    args.force,
+                )?;
+            } else {
+                info!("Root manifest needs backup; skipping (dry-run mode)");
+            }
+        } else {
+            info!("Root manifest already backed up; skipping");
         }
     }
 

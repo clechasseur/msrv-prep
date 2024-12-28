@@ -9,6 +9,9 @@
 //!
 //! To install `cargo-msrv-prep`, see [the project's GitHub page](https://github.com/clechasseur/msrv-prep).
 
+#![deny(rustdoc::broken_intra_doc_links)]
+#![deny(rustdoc::private_intra_doc_links)]
+
 pub mod common_args;
 mod detail;
 pub mod metadata;
@@ -33,6 +36,9 @@ pub const DEFAULT_MANIFEST_BACKUP_SUFFIX: &str = ".msrv-prep.bak";
 
 /// Field in the `package` section of a manifest that stores the package's MSRV.
 pub const RUST_VERSION_SPECIFIER: &str = "rust-version";
+
+/// Default name of a Cargo manifest file.
+pub const DEFAULT_MANIFEST_FILE_NAME: &str = "Cargo.toml";
 
 /// Extension used for lockfiles.
 pub const LOCKFILE_EXT: &str = "lock";

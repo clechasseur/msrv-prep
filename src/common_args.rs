@@ -17,4 +17,10 @@ pub struct CommonArgs {
     /// Suffix used for manifest backup files
     #[arg(long, default_value = DEFAULT_MANIFEST_BACKUP_SUFFIX)]
     pub manifest_backup_suffix: String,
+
+    /// Always back up the root manifest
+    ///
+    /// Use to back up the `Cargo.lock` of a workspace without a root package
+    #[arg(long, default_value_t = false)]
+    pub backup_root_manifest: bool,
 }

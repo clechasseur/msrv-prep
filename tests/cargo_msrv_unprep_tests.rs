@@ -122,4 +122,23 @@ mod custom_values {
         temp.child("Cargo.toml.my-msrv-prep.bak").assert(missing());
         temp.child("Cargo.lock.my-msrv-prep.bak").assert(missing());
     }
+
+    #[test_log::test]
+    fn rootless_workspace_with_root_manifest_backup() {
+        let temp = fork_project("rootless_workspace");
+
+        Command::new(MSRV_UNPREP_BIN_EXE)
+            .current_dir(temp.path())
+            .arg("msrv-unprep")
+            .arg("--workspace")
+            .arg("--backup-root-manifest")
+            .arg("-vvvv")
+            .assert()
+            .success();
+
+        validate_unprep_result(
+            &ChildPath::new(temp.path()),
+            &ChildPath::new(project_path("rootless_workspace")),
+        );
+    }
 }

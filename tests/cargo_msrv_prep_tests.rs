@@ -270,12 +270,16 @@ mod workspace {
 
     use super::*;
 
-    fn validate_workspace_result<'a, 'b, C, U>(temp: &TempDir, changed: C, unchanged: U)
-    where
+    fn validate_workspace_result<'a, 'b, C, U>(
+        project_name: &str,
+        temp: &TempDir,
+        changed: C,
+        unchanged: U,
+    ) where
         C: IntoIterator<Item = &'a str>,
         U: IntoIterator<Item = &'b str>,
     {
-        let project_path = project_path("workspace");
+        let project_path = project_path(project_name);
 
         for package in changed {
             assert!(toml_files_equal(
@@ -304,6 +308,11 @@ mod workspace {
             temp.child(package)
                 .child("Cargo.toml.msrv-prep.bak")
                 .assert(missing());
+            if project_path.join(package).join("Cargo.lock").is_file() {
+                temp.child(package)
+                    .child("Cargo.lock")
+                    .assert(eq_file(project_path.join(package).join("Cargo.lock")));
+            }
             temp.child(package)
                 .child("Cargo.lock.msrv-prep.bak")
                 .assert(missing());
@@ -322,7 +331,7 @@ mod workspace {
             .assert()
             .success();
 
-        validate_workspace_result(&temp, ["", "member_a", "member_b", "member_c"], []);
+        validate_workspace_result("workspace", &temp, ["", "member_a", "member_b", "member_c"], []);
     }
 
     mod specific_packages_tests {
@@ -346,7 +355,7 @@ mod workspace {
                 .filter(|&dir| dir != package_dir)
                 .collect::<Vec<_>>();
 
-            validate_workspace_result(&temp, [package_dir], unchanged);
+            validate_workspace_result("workspace", &temp, [package_dir], unchanged);
         }
 
         #[test_log::test]
@@ -392,7 +401,7 @@ mod workspace {
                 .filter(|&dir| dir != package_dir)
                 .collect::<Vec<_>>();
 
-            validate_workspace_result(&temp, changed, [package_dir]);
+            validate_workspace_result("workspace", &temp, changed, [package_dir]);
         }
 
         #[test_log::test]
@@ -413,6 +422,51 @@ mod workspace {
         #[test_log::test]
         fn without_member_c() {
             test_without_package("test-workspace-member-c", "member_c");
+        }
+    }
+
+    mod rootless_workspace {
+        use super::*;
+
+        #[test_log::test]
+        fn test_without_root_package() {
+            let temp = fork_project("rootless_workspace");
+
+            Command::new(MSRV_PREP_BIN_EXE)
+                .current_dir(temp.path())
+                .arg("msrv-prep")
+                .arg("--workspace")
+                .arg("-vvvv")
+                .assert()
+                .success();
+
+            validate_workspace_result(
+                "rootless_workspace",
+                &temp,
+                ["member_a", "member_b", "member_c"],
+                [""],
+            );
+        }
+
+        #[test_log::test]
+        fn test_backup_root_manifest() {
+            let temp = fork_project("rootless_workspace");
+
+            Command::new(MSRV_PREP_BIN_EXE)
+                .current_dir(temp.path())
+                .arg("msrv-prep")
+                .arg("--workspace")
+                .arg("--backup-root-manifest")
+                .arg("-vvvv")
+                .assert()
+                .success();
+
+            validate_workspace_result(
+                "rootless_workspace",
+                &temp,
+                ["", "member_a", "member_b", "member_c"],
+                [],
+            );
         }
     }
 }
