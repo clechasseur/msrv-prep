@@ -519,6 +519,28 @@ mod with_workspaces {
                 [],
             );
         }
+
+        #[test_log::test]
+        fn dry_run_with_backup_root_manifest() {
+            let temp = fork_project("rootless_workspace");
+
+            Command::new(MSRV_PREP_BIN_EXE)
+                .current_dir(temp.path())
+                .arg("msrv-prep")
+                .arg("--workspace")
+                .arg("--backup-root-manifest")
+                .arg("--dry-run")
+                .arg("-vvvv")
+                .assert()
+                .success();
+
+            validate_workspace_result(
+                "rootless_workspace",
+                &temp,
+                [],
+                ["", "member_a", "member_b", "member_c"],
+            );
+        }
     }
 }
 
