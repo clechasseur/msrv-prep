@@ -1,0 +1,18 @@
+[package]
+name = "test-workspace-member-a"
+version = "0.1.0"
+authors = [ "Charles Lechasseur <shiftingbeard@outlook.com>" ]
+edition = "2021"
+rust-version = "1.70.0"
+
+[dependencies]
+either.workspace = true
+serde_json = "1.0.114"
+
+[dev-dependencies]
+mockall.workspace = true
+wiremock = "0.6.0"
+
+[build-dependencies]
+cargo_metadata = "0.18.1"
+rustc_version.workspace = true

@@ -12,16 +12,16 @@ pub enum Error {
     #[error(transparent)]
     CargoMetadata(#[from] cargo_metadata::Error),
 
-    #[error("I/O error while {context:?}: {source:?}")]
+    #[error("I/O error while {context}: {source:?}")]
     Io { source: io::Error, context: String },
 
     #[error(transparent)]
     Toml(#[from] TomlError),
 
-    #[error("Invalid path: {0}")]
+    #[error("invalid path: {0}")]
     InvalidPath(Utf8PathBuf),
 
-    #[error("Backup file already exists: {0}")]
+    #[error("backup file already exists: {0}")]
     BackupFileAlreadyExists(Utf8PathBuf),
 }
 
@@ -41,12 +41,12 @@ pub enum Error {
 /// # }
 /// ```
 pub trait IoErrorContext {
-    /// Type returned from [`with_io_context`](IoErrorContext::with_io_context).
+    /// Type returned from [`with_io_context`](Self::with_io_context).
     type Output;
 
     /// Provides context for the I/O error.
     ///
-    /// See [trait description](IoErrorContext) for details.
+    /// See [trait description](Self) for details.
     fn with_io_context<C, F>(self, context: F) -> Self::Output
     where
         C: Into<String>,

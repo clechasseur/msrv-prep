@@ -134,6 +134,27 @@ mod simple_project {
     }
 
     #[test_log::test]
+    fn dry_run_with_backup_root_manifest() {
+        let temp = fork_project("simple_project");
+
+        Command::new(MSRV_PREP_BIN_EXE)
+            .current_dir(temp.path())
+            .arg("msrv-prep")
+            .arg("--backup-root-manifest")
+            .arg("--dry-run")
+            .arg("-vvvv")
+            .assert()
+            .success();
+
+        assert!(toml_files_equal(
+            temp.child("Cargo.toml").path(),
+            project_path("simple_project").join("Cargo.toml")
+        ));
+        temp.child("Cargo.toml.msrv-prep.bak").assert(missing());
+        temp.child("Cargo.lock.msrv-prep.bak").assert(missing());
+    }
+
+    #[test_log::test]
     fn effectively_a_dry_run() {
         let temp = fork_project("simple_project");
 
@@ -262,7 +283,7 @@ mod simple_project {
     }
 }
 
-mod workspace {
+mod with_workspaces {
     use assert_cmd::Command;
     use assert_fs::assert::PathAssert;
     use assert_fs::fixture::PathChild;
@@ -270,12 +291,16 @@ mod workspace {
 
     use super::*;
 
-    fn validate_workspace_result<'a, 'b, C, U>(temp: &TempDir, changed: C, unchanged: U)
-    where
+    fn validate_workspace_result<'a, 'b, C, U>(
+        project_name: &str,
+        temp: &TempDir,
+        changed: C,
+        unchanged: U,
+    ) where
         C: IntoIterator<Item = &'a str>,
         U: IntoIterator<Item = &'b str>,
     {
-        let project_path = project_path("workspace");
+        let project_path = project_path(project_name);
 
         for package in changed {
             assert!(toml_files_equal(
@@ -304,115 +329,217 @@ mod workspace {
             temp.child(package)
                 .child("Cargo.toml.msrv-prep.bak")
                 .assert(missing());
+            if project_path.join(package).join("Cargo.lock").is_file() {
+                temp.child(package)
+                    .child("Cargo.lock")
+                    .assert(eq_file(project_path.join(package).join("Cargo.lock")));
+            }
             temp.child(package)
                 .child("Cargo.lock.msrv-prep.bak")
                 .assert(missing());
         }
     }
 
-    #[test_log::test]
-    fn all() {
-        let temp = fork_project("workspace");
-
-        Command::new(MSRV_PREP_BIN_EXE)
-            .current_dir(temp.path())
-            .arg("msrv-prep")
-            .arg("--workspace")
-            .arg("-vvvv")
-            .assert()
-            .success();
-
-        validate_workspace_result(&temp, ["", "member_a", "member_b", "member_c"], []);
-    }
-
-    mod specific_packages_tests {
+    mod workspace {
         use super::*;
 
-        fn test_with_package(package: &str, package_dir: &str) {
-            let temp = fork_project("workspace");
-
-            Command::new(MSRV_PREP_BIN_EXE)
-                .current_dir(temp.path())
-                .arg("msrv-prep")
-                .arg("--package")
-                .arg(package)
-                .arg("-vvvv")
-                .assert()
-                .success();
-
-            let unchanged = ["", "member_a", "member_b", "member_c"]
-                .iter()
-                .copied()
-                .filter(|&dir| dir != package_dir)
-                .collect::<Vec<_>>();
-
-            validate_workspace_result(&temp, [package_dir], unchanged);
-        }
-
         #[test_log::test]
-        fn root_package() {
-            test_with_package("test-workspace", "");
-        }
-
-        #[test_log::test]
-        fn member_a() {
-            test_with_package("test-workspace-member-a", "member_a");
-        }
-
-        #[test_log::test]
-        fn member_b() {
-            test_with_package("test-workspace-member-b", "member_b");
-        }
-
-        #[test_log::test]
-        fn member_c() {
-            test_with_package("test-workspace-member-c", "member_c");
-        }
-    }
-
-    mod excluded_packages_tests {
-        use super::*;
-
-        fn test_without_package(package: &str, package_dir: &str) {
+        fn all() {
             let temp = fork_project("workspace");
 
             Command::new(MSRV_PREP_BIN_EXE)
                 .current_dir(temp.path())
                 .arg("msrv-prep")
                 .arg("--workspace")
-                .arg("--exclude")
-                .arg(package)
                 .arg("-vvvv")
                 .assert()
                 .success();
 
-            let changed = ["", "member_a", "member_b", "member_c"]
-                .iter()
-                .copied()
-                .filter(|&dir| dir != package_dir)
-                .collect::<Vec<_>>();
-
-            validate_workspace_result(&temp, changed, [package_dir]);
+            validate_workspace_result(
+                "workspace",
+                &temp,
+                ["", "member_a", "member_b", "member_c"],
+                [],
+            );
         }
 
         #[test_log::test]
-        fn without_root_package() {
-            test_without_package("test-workspace", "");
+        fn backup_root_manifest() {
+            let temp = fork_project("workspace");
+
+            Command::new(MSRV_PREP_BIN_EXE)
+                .current_dir(temp.path())
+                .arg("msrv-prep")
+                .arg("--workspace")
+                .arg("--backup-root-manifest")
+                .arg("-vvvv")
+                .assert()
+                .success();
+
+            validate_workspace_result(
+                "workspace",
+                &temp,
+                ["", "member_a", "member_b", "member_c"],
+                [],
+            );
+        }
+
+        mod specific_packages_tests {
+            use super::*;
+
+            fn test_with_package(package: &str, package_dir: &str) {
+                let temp = fork_project("workspace");
+
+                Command::new(MSRV_PREP_BIN_EXE)
+                    .current_dir(temp.path())
+                    .arg("msrv-prep")
+                    .arg("--package")
+                    .arg(package)
+                    .arg("-vvvv")
+                    .assert()
+                    .success();
+
+                let unchanged = ["", "member_a", "member_b", "member_c"]
+                    .iter()
+                    .copied()
+                    .filter(|&dir| dir != package_dir)
+                    .collect::<Vec<_>>();
+
+                validate_workspace_result("workspace", &temp, [package_dir], unchanged);
+            }
+
+            #[test_log::test]
+            fn root_package() {
+                test_with_package("test-workspace", "");
+            }
+
+            #[test_log::test]
+            fn member_a() {
+                test_with_package("test-workspace-member-a", "member_a");
+            }
+
+            #[test_log::test]
+            fn member_b() {
+                test_with_package("test-workspace-member-b", "member_b");
+            }
+
+            #[test_log::test]
+            fn member_c() {
+                test_with_package("test-workspace-member-c", "member_c");
+            }
+        }
+
+        mod excluded_packages_tests {
+            use super::*;
+
+            fn test_without_package(package: &str, package_dir: &str) {
+                let temp = fork_project("workspace");
+
+                Command::new(MSRV_PREP_BIN_EXE)
+                    .current_dir(temp.path())
+                    .arg("msrv-prep")
+                    .arg("--workspace")
+                    .arg("--exclude")
+                    .arg(package)
+                    .arg("-vvvv")
+                    .assert()
+                    .success();
+
+                let changed = ["", "member_a", "member_b", "member_c"]
+                    .iter()
+                    .copied()
+                    .filter(|&dir| dir != package_dir)
+                    .collect::<Vec<_>>();
+
+                validate_workspace_result("workspace", &temp, changed, [package_dir]);
+            }
+
+            #[test_log::test]
+            fn without_root_package() {
+                test_without_package("test-workspace", "");
+            }
+
+            #[test_log::test]
+            fn without_member_a() {
+                test_without_package("test-workspace-member-a", "member_a");
+            }
+
+            #[test_log::test]
+            fn without_member_b() {
+                test_without_package("test-workspace-member-b", "member_b");
+            }
+
+            #[test_log::test]
+            fn without_member_c() {
+                test_without_package("test-workspace-member-c", "member_c");
+            }
+        }
+    }
+
+    mod rootless_workspace {
+        use super::*;
+
+        #[test_log::test]
+        fn all() {
+            let temp = fork_project("rootless_workspace");
+
+            Command::new(MSRV_PREP_BIN_EXE)
+                .current_dir(temp.path())
+                .arg("msrv-prep")
+                .arg("--workspace")
+                .arg("-vvvv")
+                .assert()
+                .success();
+
+            validate_workspace_result(
+                "rootless_workspace",
+                &temp,
+                ["member_a", "member_b", "member_c"],
+                [""],
+            );
         }
 
         #[test_log::test]
-        fn without_member_a() {
-            test_without_package("test-workspace-member-a", "member_a");
+        fn backup_root_manifest() {
+            let temp = fork_project("rootless_workspace");
+
+            Command::new(MSRV_PREP_BIN_EXE)
+                .current_dir(temp.path())
+                .arg("msrv-prep")
+                .arg("--workspace")
+                .arg("--backup-root-manifest")
+                .arg("-vvvv")
+                .assert()
+                .success();
+
+            validate_workspace_result(
+                "rootless_workspace",
+                &temp,
+                ["", "member_a", "member_b", "member_c"],
+                [],
+            );
         }
 
         #[test_log::test]
-        fn without_member_b() {
-            test_without_package("test-workspace-member-b", "member_b");
-        }
+        fn dry_run_with_backup_root_manifest() {
+            let temp = fork_project("rootless_workspace");
 
-        #[test_log::test]
-        fn without_member_c() {
-            test_without_package("test-workspace-member-c", "member_c");
+            Command::new(MSRV_PREP_BIN_EXE)
+                .current_dir(temp.path())
+                .arg("msrv-prep")
+                .arg("--workspace")
+                .arg("--backup-root-manifest")
+                .arg("--dry-run")
+                .arg("-vvvv")
+                .assert()
+                .success();
+
+            validate_workspace_result(
+                "rootless_workspace",
+                &temp,
+                [],
+                ["", "member_a", "member_b", "member_c"],
+            );
         }
     }
 }
