@@ -37,7 +37,7 @@ clap = { version = "4.5.23", features = ["cargo", "derive"] }
 # Note: clap-cargo 0.14 uses a different way of determining default workspace members,
 # but that only works on Rust 1.71+. We'll keep using 0.13 for the time being; I'll try
 # to propose a change to clap-cargo to lift that restriction.
-clap-cargo = { version = "^0.13.0", features = ["cargo_metadata"] }
+clap-cargo = { version = "^0.15.2", features = ["cargo_metadata"] }
 clap-verbosity-flag = "3.0.2"
 env_logger = "0.11.6"
 log = "0.4.22"
