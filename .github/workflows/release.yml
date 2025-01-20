@@ -43,7 +43,7 @@ jobs:
           cache: false
 
       - name: Setup cross-compilation tools
-        uses: taiki-e/setup-cross-toolchain-action@bdeb9ca6f0f909ea36bb94e1e3ec916b2ceb35fc # v1.26.0
+        uses: taiki-e/setup-cross-toolchain-action@1b7a78f3a5d6480ee3fff55b679f60bc2fb2286e # v1.27.0
         with:
           target: ${{ matrix.arch }}-${{ matrix.platform }}
 
