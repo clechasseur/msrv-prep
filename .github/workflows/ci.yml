@@ -84,7 +84,7 @@ jobs:
           cache-on-failure: true
 
       - name: Install required tools
-        uses: taiki-e/install-action@24758ef6e77fc43f81a25d59a614a409e8fa7cd9 # v2.47.19
+        uses: taiki-e/install-action@a209ff0ce0349f9e7cadc4ba8f6a415c8d3b0813 # v2.49.11
         with:
           tool: just,cargo-hack,cargo-minimal-versions,cargo-msrv-prep
         env:
@@ -136,7 +136,7 @@ jobs:
           cache-on-failure: true
 
       - name: Install just
-        uses: taiki-e/install-action@24758ef6e77fc43f81a25d59a614a409e8fa7cd9 # v2.47.19
+        uses: taiki-e/install-action@a209ff0ce0349f9e7cadc4ba8f6a415c8d3b0813 # v2.49.11
         with:
           tool: just
         env:
@@ -198,7 +198,7 @@ jobs:
           cache-on-failure: true
 
       - name: Install cargo-tarpaulin
-        uses: taiki-e/install-action@24758ef6e77fc43f81a25d59a614a409e8fa7cd9 # v2.47.19
+        uses: taiki-e/install-action@a209ff0ce0349f9e7cadc4ba8f6a415c8d3b0813 # v2.49.11
         with:
           tool: cargo-tarpaulin
         env:
@@ -254,7 +254,7 @@ jobs:
           cache-on-failure: true
 
       - name: Install just
-        uses: taiki-e/install-action@24758ef6e77fc43f81a25d59a614a409e8fa7cd9 # v2.47.19
+        uses: taiki-e/install-action@a209ff0ce0349f9e7cadc4ba8f6a415c8d3b0813 # v2.49.11
         with:
           tool: just
         env:
