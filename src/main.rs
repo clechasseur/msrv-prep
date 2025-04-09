@@ -90,7 +90,7 @@ mod mockable {
         use std::path::Path;
 
         #[allow(dead_code)]
-        #[cfg(not(tarpaulin_include))]
+        #[cfg_attr(coverage_nightly, coverage(off))]
         #[cfg_attr(test, mockall::concretize)]
         pub fn write<P, C>(path: P, contents: C) -> io::Result<()>
         where
@@ -249,6 +249,7 @@ fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use std::path::PathBuf;
 

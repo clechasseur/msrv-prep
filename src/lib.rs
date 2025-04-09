@@ -11,6 +11,7 @@
 
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
 
 pub mod common_args;
 mod detail;
@@ -221,6 +222,7 @@ fn backup_file(file_path: &Utf8Path, backup_path: &Utf8Path) -> Result<()> {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use super::*;
 
