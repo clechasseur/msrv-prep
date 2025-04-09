@@ -40,6 +40,7 @@ fn merge_toml_array(destination: &mut ArrayOfTables, source: &ArrayOfTables) {
 }
 
 #[cfg(test)]
+#[cfg_attr(coverage_nightly, coverage(off))]
 mod tests {
     use indoc::indoc;
     use toml_edit::{value, Datetime, DocumentMut, ImDocument, Value};
