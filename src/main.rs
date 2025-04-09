@@ -51,6 +51,8 @@
 //! unix-specific-build-baz = "4.0.0"
 //! ```
 
+#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
+
 use std::fs;
 
 use cargo_msrv_prep::common_args::CommonArgs;
@@ -83,14 +85,14 @@ fn main() -> cargo_msrv_prep::Result<()> {
 }
 
 mod mockable {
+    #[allow(dead_code)]
+    #[cfg_attr(coverage_nightly, coverage(off))]
     #[cfg_attr(test, mockall::automock)]
     pub(super) mod fs {
         use std::fs as real_fs;
         use std::io;
         use std::path::Path;
 
-        #[allow(dead_code)]
-        #[cfg_attr(coverage_nightly, coverage(off))]
         #[cfg_attr(test, mockall::concretize)]
         pub fn write<P, C>(path: P, contents: C) -> io::Result<()>
         where
