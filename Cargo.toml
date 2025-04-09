@@ -1,6 +1,6 @@
 [package]
 name = "cargo-msrv-prep"
-version = "2.1.0"
+version = "2.1.1"
 authors = [ "Charles Lechasseur <shiftingbeard@outlook.com>" ]
 edition = "2021"
 rust-version = "1.79.0"
@@ -10,7 +10,6 @@ license = "MIT"
 
 homepage = "https://github.com/clechasseur/msrv-prep#readme"
 repository = "https://github.com/clechasseur/msrv-prep"
-documentation = "https://docs.rs/cargo-msrv-prep"
 
 description = "Cargo subcommand useful to prepare for determining/verifying a crate's MSRV"
 
