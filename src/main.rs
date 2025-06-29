@@ -154,7 +154,7 @@ struct MsrvPrepArgs {
 }
 
 fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
-    trace!("Entering `prep_for_msrv` (args: {:?})", args);
+    trace!("Entering `prep_for_msrv` (args: {args:?})");
 
     let metadata: Metadata = (&args.common).try_into()?;
     debug!("Workspace root: {}", metadata.cargo_metadata.workspace_root);
@@ -171,10 +171,10 @@ fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
         let rust_version_removed = if !args.no_remove_rust_version {
             let removed = remove_rust_version(&mut manifest);
 
-            debug!("'{}' field removed: {}", RUST_VERSION_SPECIFIER, removed);
+            debug!("'{RUST_VERSION_SPECIFIER}' field removed: {removed}");
             removed
         } else {
-            info!("Skipping removal of '{}' field", RUST_VERSION_SPECIFIER);
+            info!("Skipping removal of '{RUST_VERSION_SPECIFIER}' field");
             false
         };
 
@@ -185,7 +185,7 @@ fn prep_for_msrv(args: &MsrvPrepArgs) -> cargo_msrv_prep::Result<()> {
                 &args.pins_file_name,
             )?;
 
-            debug!("Pinned MSRV dependencies merged: {}", merged);
+            debug!("Pinned MSRV dependencies merged: {merged}");
             merged
         } else {
             info!("Skipping merging of pinned MSRV dependencies");

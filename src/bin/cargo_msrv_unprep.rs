@@ -35,7 +35,7 @@ struct MsrvUnprepArgs {
 }
 
 fn unprep_from_msrv(args: &MsrvUnprepArgs) -> cargo_msrv_prep::Result<()> {
-    trace!("Entering `unprep_from_msrv` (args: {:?})", args);
+    trace!("Entering `unprep_from_msrv` (args: {args:?})");
 
     let metadata: Metadata = (&args.common).try_into()?;
     debug!("Workspace root: {}", metadata.cargo_metadata.workspace_root);
