@@ -16,7 +16,7 @@ pub fn merge_msrv_dependencies(manifest: &mut Table, msrv_dependencies: &Table) 
     let mut changed = merge_dependencies_sections(manifest, msrv_dependencies, None);
 
     if let Some(Item::Table(msrv_target_table)) = msrv_dependencies.get(TARGET_SECTION_NAME) {
-        info!("MSRV dependencies found in '{}'; merging", TARGET_SECTION_NAME);
+        info!("MSRV dependencies found in '{TARGET_SECTION_NAME}'; merging");
 
         changed = merge_table(manifest, TARGET_SECTION_NAME, msrv_target_table, |dest, src| {
             let mut changed = false;
@@ -25,14 +25,13 @@ pub fn merge_msrv_dependencies(manifest: &mut Table, msrv_dependencies: &Table) 
                 if let Item::Table(msrv_table) = msrv_value {
                     changed = merge_table(dest, msrv_key, msrv_table, |dest, src| {
                         info!(
-                            "MSRV dependencies found in '{}.{}'; merging",
-                            TARGET_SECTION_NAME, msrv_key
+                            "MSRV dependencies found in '{TARGET_SECTION_NAME}.{msrv_key}'; merging"
                         );
 
                         merge_dependencies_sections(
                             dest,
                             src,
-                            Some(format!("{}.{}.", TARGET_SECTION_NAME, msrv_key)),
+                            Some(format!("{TARGET_SECTION_NAME}.{msrv_key}.")),
                         )
                     }) || changed;
                 }
@@ -42,7 +41,7 @@ pub fn merge_msrv_dependencies(manifest: &mut Table, msrv_dependencies: &Table) 
         }) || changed;
     }
 
-    trace!("Exiting `merge_msrv_dependencies` (changed: {})", changed);
+    trace!("Exiting `merge_msrv_dependencies` (changed: {changed})");
     changed
 }
 
@@ -64,21 +63,21 @@ fn merge_dependencies_sections(
     msrv_dependencies: &Table,
     key_prefix: Option<String>,
 ) -> bool {
-    trace!("Entering `merge_dependencies_section` (key_prefix: '{:?}'", key_prefix);
+    trace!("Entering `merge_dependencies_section` (key_prefix: '{key_prefix:?}'");
 
     let mut changed = false;
     let key_prefix = key_prefix.as_deref().unwrap_or("");
 
     for name in [DEPENDENCIES_SECTION_NAME, BUILD_DEPENDENCIES_SECTION_NAME] {
         if let Some(src_section) = msrv_dependencies.get(name) {
-            info!("MSRV dependencies found in section '{}{}'; merging", key_prefix, name);
+            info!("MSRV dependencies found in section '{key_prefix}{name}'; merging");
 
             merge_toml(manifest.entry(name), src_section);
             changed = true;
         }
     }
 
-    trace!("Exiting `merge_dependencies_section` (changed: {})", changed);
+    trace!("Exiting `merge_dependencies_section` (changed: {changed})");
     changed
 }
 

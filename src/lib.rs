@@ -53,17 +53,14 @@ pub fn remove_rust_version(manifest: &mut Table) -> bool {
 
     let changed = match manifest.get_mut(PACKAGE_SECTION_NAME) {
         Some(Item::Table(package)) => {
-            info!(
-                "'package' section found in manifest, removing '{}' field",
-                RUST_VERSION_SPECIFIER
-            );
+            info!("'package' section found in manifest, removing '{RUST_VERSION_SPECIFIER}' field");
 
             package.remove(RUST_VERSION_SPECIFIER).is_some()
         },
         _ => false,
     };
 
-    trace!("Exiting `remove_rust_version` (changed: {})", changed);
+    trace!("Exiting `remove_rust_version` (changed: {changed})");
     changed
 }
 
@@ -78,25 +75,22 @@ pub fn maybe_merge_msrv_dependencies(
     pins_file_name: &str,
 ) -> Result<bool> {
     trace!(
-        "Entering `maybe_merge_msrv_dependencies` (manifest_path: '{}', pins_file_name: '{}')",
-        manifest_path,
-        pins_file_name
+        "Entering `maybe_merge_msrv_dependencies` (manifest_path: '{manifest_path}', pins_file_name: '{pins_file_name}')"
     );
     let mut changed = false;
 
     let pins_file_path = manifest_path.parent().map(|par| par.join(pins_file_name));
 
     if let Some(pins_file_path) = pins_file_path {
-        debug!("Pinned MSRV dependencies file path: {}", pins_file_path);
+        debug!("Pinned MSRV dependencies file path: {pins_file_path}");
 
         if pins_file_path.is_file() {
             info!(
-                "Pinned MSRV dependencies file found at '{}'; merging with manifest at '{}'",
-                pins_file_path, manifest_path
+                "Pinned MSRV dependencies file found at '{pins_file_path}'; merging with manifest at '{manifest_path}'"
             );
 
             let pins_file_text = fs::read_to_string(&pins_file_path)
-                .with_io_context(|| format!("reading MSRV pins file '{}'", pins_file_path))?;
+                .with_io_context(|| format!("reading MSRV pins file '{pins_file_path}'"))?;
             let pins_file = ImDocument::parse(pins_file_text)?;
 
             changed = merge_msrv_dependencies(manifest, &pins_file);
@@ -105,7 +99,7 @@ pub fn maybe_merge_msrv_dependencies(
         warn!("Pinned MSRV dependencies file path could not be determined; skipping");
     }
 
-    trace!("Exiting `maybe_merge_msrv_dependencies` (changed: {})", changed);
+    trace!("Exiting `maybe_merge_msrv_dependencies` (changed: {changed})");
     Ok(changed)
 }
 
@@ -116,10 +110,7 @@ pub fn maybe_merge_msrv_dependencies(
 /// If a lockfile exists next to the manifest, it is also backed up in a similar manner.
 pub fn backup_manifest(manifest_path: &Utf8Path, backup_suffix: &str, force: bool) -> Result<()> {
     trace!(
-        "Entering `backup_manifest` (manifest_path: '{}', backup_suffix: '{}', force: {})",
-        manifest_path,
-        backup_suffix,
-        force,
+        "Entering `backup_manifest` (manifest_path: '{manifest_path}', backup_suffix: '{backup_suffix}', force: {force})",
     );
 
     let lockfile_path = manifest_path.with_extension(LOCKFILE_EXT);
@@ -149,9 +140,7 @@ pub fn backup_manifest(manifest_path: &Utf8Path, backup_suffix: &str, force: boo
 /// If a lockfile was also backed up next to the manifest, it is also restored.
 pub fn maybe_restore_manifest(manifest_path: &Utf8Path, backup_suffix: &str) -> Result<()> {
     trace!(
-        "Entering `maybe_restore_manifest` (manifest_path: '{}', backup_suffix: '{}')",
-        manifest_path,
-        backup_suffix
+        "Entering `maybe_restore_manifest` (manifest_path: '{manifest_path}', backup_suffix: '{backup_suffix}')"
     );
 
     let lockfile_path = manifest_path.with_extension(LOCKFILE_EXT);
@@ -168,19 +157,17 @@ pub fn maybe_restore_manifest(manifest_path: &Utf8Path, backup_suffix: &str) -> 
 
 fn maybe_restore_file(file_path: &Utf8Path, backup_suffix: &str) -> Result<()> {
     trace!(
-        "Entering `maybe_restore_file` (file_path: '{}', backup_suffix: '{}')",
-        file_path,
-        backup_suffix
+        "Entering `maybe_restore_file` (file_path: '{file_path}', backup_suffix: '{backup_suffix}')"
     );
 
     let backup_path = get_backup_path(file_path, backup_suffix)?;
-    debug!("Backup path: {}", backup_path);
+    debug!("Backup path: {backup_path}");
 
     if backup_path.is_file() {
-        info!("Backup file found at '{}'; restoring to '{}'", backup_path, file_path);
+        info!("Backup file found at '{backup_path}'; restoring to '{file_path}'");
 
         mockable_fs::rename(&backup_path, file_path).with_io_context(|| {
-            format!("restoring backup from '{}' to '{}'", backup_path, file_path)
+            format!("restoring backup from '{backup_path}' to '{file_path}'")
         })?;
     }
 
@@ -200,13 +187,12 @@ fn validate_backup_file(backup_path: &Utf8Path, force: bool) -> Result<()> {
     match (backup_path.is_file(), force) {
         (true, true) => {
             info!(
-                "Backup file already exists at '{}'; will be overwritten (forced backup)",
-                backup_path
+                "Backup file already exists at '{backup_path}'; will be overwritten (forced backup)"
             );
             Ok(())
         },
         (true, false) => {
-            error!("Backup file already exists at '{}'; aborting", backup_path);
+            error!("Backup file already exists at '{backup_path}'; aborting");
 
             Err(Error::BackupFileAlreadyExists(backup_path.into()))
         },
@@ -215,10 +201,10 @@ fn validate_backup_file(backup_path: &Utf8Path, force: bool) -> Result<()> {
 }
 
 fn backup_file(file_path: &Utf8Path, backup_path: &Utf8Path) -> Result<()> {
-    info!("Backing up '{}' to '{}'", file_path, backup_path);
+    info!("Backing up '{file_path}' to '{backup_path}'");
     mockable_fs::copy(file_path, backup_path)
         .map(|_| ())
-        .with_io_context(|| format!("backing up '{}' to '{}'", file_path, backup_path))
+        .with_io_context(|| format!("backing up '{file_path}' to '{backup_path}'"))
 }
 
 #[cfg(test)]
