@@ -135,8 +135,10 @@ mod tests {
         let expected = indoc! {r#"
             [[tables]]
             was_already_there = "hello!" # comment
+            
             [[tables]]
             life = 42
+            
             [[tables]]
             hangar = "23"
             cool = true

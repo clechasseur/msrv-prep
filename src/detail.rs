@@ -203,6 +203,7 @@ mod tests {
             let expected = indoc! {r#"
                 [dependencies]
                 serde = "1.0.0"
+                
                 [target.'cfg(unix)'.dependencies]
                 unix_specific_crate = "1.0.0"
     
