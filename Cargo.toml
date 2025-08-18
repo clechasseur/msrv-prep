@@ -31,7 +31,7 @@ path = "src/bin/cargo_msrv_unprep.rs"
 
 [dependencies]
 # Note: we lock ourselves to cargo-metadata 0.18 because of the lock on clap-cargo (see below).
-cargo_metadata = "^0.18.1"
+cargo_metadata = "^0.22.0"
 clap = { version = "4.5.45", features = ["cargo", "derive"] }
 # Note: clap-cargo 0.14 uses a different way of determining default workspace members,
 # but that only works on Rust 1.71+. We'll keep using 0.13 for the time being; I'll try
