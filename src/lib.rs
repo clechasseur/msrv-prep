@@ -25,7 +25,7 @@ use cargo_metadata::camino::{Utf8Path, Utf8PathBuf};
 use log::{debug, error, info, trace, warn};
 pub use result::Error;
 pub use result::Result;
-use toml_edit::{ImDocument, Item, Table};
+use toml_edit::{Document, Item, Table};
 
 use crate::detail::{merge_msrv_dependencies, PACKAGE_SECTION_NAME};
 #[mockall_double::double]
@@ -91,7 +91,7 @@ pub fn maybe_merge_msrv_dependencies(
 
             let pins_file_text = fs::read_to_string(&pins_file_path)
                 .with_io_context(|| format!("reading MSRV pins file '{pins_file_path}'"))?;
-            let pins_file = ImDocument::parse(pins_file_text)?;
+            let pins_file = Document::parse(pins_file_text)?;
 
             changed = merge_msrv_dependencies(manifest, &pins_file);
         }
