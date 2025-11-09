@@ -88,7 +88,7 @@ mod tests {
 
     mod merge_msrv_dependencies {
         use indoc::indoc;
-        use toml_edit::{DocumentMut, ImDocument};
+        use toml_edit::{Document, DocumentMut};
 
         use super::*;
 
@@ -112,7 +112,7 @@ mod tests {
                 thiserror = "1.0.0"
                 toml_edit = "0.22.0"
             "#};
-            let msrv_dependencies = ImDocument::parse(msrv_dependencies).unwrap();
+            let msrv_dependencies = Document::parse(msrv_dependencies).unwrap();
 
             assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
@@ -150,7 +150,7 @@ mod tests {
                 [build-dependencies]
                 cargo_metadata = "0.18.0"
             "#};
-            let msrv_dependencies = ImDocument::parse(msrv_dependencies).unwrap();
+            let msrv_dependencies = Document::parse(msrv_dependencies).unwrap();
 
             assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
@@ -196,26 +196,25 @@ mod tests {
                 [target.'cfg(unix)'.build-dependencies]
                 another_unix_api = "2.0.0"
             "#};
-            let msrv_dependencies = ImDocument::parse(msrv_dependencies).unwrap();
+            let msrv_dependencies = Document::parse(msrv_dependencies).unwrap();
 
             assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
             let expected = indoc! {r#"
                 [dependencies]
                 serde = "1.0.0"
-                
                 [target.'cfg(unix)'.dependencies]
                 unix_specific_crate = "1.0.0"
-    
+
                 [target.'cfg(windows)'.dependencies]
                 win32_api = "1.0.0"
-    
+
                 [dev-dependencies]
                 indoc = "2.0.0"
-    
+
                 [build-dependencies]
                 rustc_version = "0.4.0"
-    
+
                 [target.'cfg(unix)'.build-dependencies]
                 unix_api = "1.0.0"
                 another_unix_api = "2.0.0"
@@ -235,7 +234,7 @@ mod tests {
                 [target.'cfg(unix)'.dependencies]
                 unix_specific_crate = "1.0.0"
             "#};
-            let msrv_dependencies = ImDocument::parse(msrv_dependencies).unwrap();
+            let msrv_dependencies = Document::parse(msrv_dependencies).unwrap();
 
             assert!(merge_msrv_dependencies(&mut manifest, &msrv_dependencies));
 
