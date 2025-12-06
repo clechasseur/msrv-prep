@@ -42,7 +42,7 @@ env_logger = "0.11.8"
 log = "0.4.29"
 mockall_double = "0.3.1"
 thiserror = "2.0.17"
-toml_edit = "0.23.7"
+toml_edit = "0.23.9"
 
 [dev-dependencies]
 assert_cmd = "2.1.1"
