@@ -125,7 +125,7 @@ jobs:
         uses: clechasseur/rs-cargo@v5.0.3
         with:
           command: binstall
-          args: -y cargo-hack@0.6.44 cargo-minimal-versions@0.1.37 cargo-msrv-prep@2.1.1
+          args: -y cargo-hack@0.6.44 cargo-minimal-versions@0.1.37 cargo-msrv-prep@2.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
