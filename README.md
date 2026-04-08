@@ -82,7 +82,7 @@ cargo minimal-versions check --workspace --lib --bins --all-features
 ```
 
 Here's an example of a GitHub workflow to perform this validation in your CI.
-This workflow uses [`taiki-e/install-action`](https://github.com/taiki-e/install-action) to install the required tools.
+This workflow uses [`cargo-binstall`](https://github.com/cargo-bins/cargo-binstall) to install the required tools.
 
 ```yaml
 name: MSRV check
@@ -91,7 +91,7 @@ on: [push]
 
 jobs:
   msrv-check:
-    name: MSRV check for Rust ${{ matrix.toolchain }} on ${{ matrix.os }}
+    name: MSRV check on ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -99,31 +99,35 @@ jobs:
         os: [ ubuntu, macos, windows ] # It's probably a good idea to run this check on all supported OSes
     runs-on: ${{ matrix.os }}-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Install Rust nightly toolchain # Required for `cargo-minimal-versions` to work
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+      # Nightly toolchain is required for `cargo-minimal-versions` to work
+      - name: Install Rust nightly and ${{ matrix.toolchain }}
+        uses: actions-rust-lang/setup-rust-toolchain@150fca883cd4034361b621bd4e6a9d34e5143606 # v1.15.4
         with:
-          toolchain: nightly
-          cache: false
-
-      - name: Install Rust minimum supported toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: ${{ matrix.toolchain }}
+          toolchain: nightly,${{ matrix.toolchain }}
           cache: false
   
       # If you want to use the `rust-cache` action, it's probably a good idea to make your cache key
       # conditional on the `msrv-pins.toml` file(s) since they will affect the resulting build
       - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
         with:
           key: msrv-pins-files-${{ hashFiles('**/msrv-pins.toml') }}
+          cache-on-failure: true
+
+      - name: Setup cargo-binstall
+        uses: cargo-bins/cargo-binstall@v1.17.9
+        with:
+          version: v1.17.9
 
       - name: Install required tools
-        uses: taiki-e/install-action@v2
+        uses: clechasseur/rs-cargo@v5.0.3
         with:
-          tool: cargo-hack,cargo-minimal-versions,cargo-msrv-prep
+          command: binstall
+          args: -y cargo-hack@0.6.44 cargo-minimal-versions@0.1.37 cargo-msrv-prep@2.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run checks using cargo-minimal-versions
         run: |
@@ -133,5 +137,5 @@ jobs:
 
 ## MSRV of `cargo-msrv-prep`
 
-The MSRV of the `cargo-msrv-prep` tool is Rust **1.79.0**.
+The MSRV of the `cargo-msrv-prep` tool is Rust **1.85.1**.
 This is only important when installing from source (e.g. with `cargo install`) however, since the executable will then work with older Rust versions.
