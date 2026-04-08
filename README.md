@@ -82,7 +82,7 @@ cargo minimal-versions check --workspace --lib --bins --all-features
 ```
 
 Here's an example of a GitHub workflow to perform this validation in your CI.
-This workflow uses [`taiki-e/install-action`](https://github.com/taiki-e/install-action) to install the required tools.
+This workflow uses [`cargo-binstall`](https://github.com/cargo-bins/cargo-binstall) to install the required tools.
 
 ```yaml
 name: MSRV check
@@ -91,7 +91,7 @@ on: [push]
 
 jobs:
   msrv-check:
-    name: MSRV check for Rust ${{ matrix.toolchain }} on ${{ matrix.os }}
+    name: MSRV check on ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -99,18 +99,13 @@ jobs:
         os: [ ubuntu, macos, windows ] # It's probably a good idea to run this check on all supported OSes
     runs-on: ${{ matrix.os }}-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Install Rust nightly toolchain # Required for `cargo-minimal-versions` to work
+      # Nightly toolchain is required for `cargo-minimal-versions` to work
+      - name: Install Rust nightly and ${{ matrix.toolchain }}
         uses: actions-rust-lang/setup-rust-toolchain@150fca883cd4034361b621bd4e6a9d34e5143606 # v1.15.4
         with:
-          toolchain: nightly
-          cache: false
-
-      - name: Install Rust minimum supported toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@150fca883cd4034361b621bd4e6a9d34e5143606 # v1.15.4
-        with:
-          toolchain: ${{ matrix.toolchain }}
+          toolchain: nightly,${{ matrix.toolchain }}
           cache: false
   
       # If you want to use the `rust-cache` action, it's probably a good idea to make your cache key
