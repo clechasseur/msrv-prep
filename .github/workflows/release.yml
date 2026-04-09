@@ -1,9 +1,13 @@
 name: Release
 
 on:
-  release:
-    types: [created]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to use to build release files'
+        required: true
+        default: 'main'
+        type: string
 
 jobs:
   build-release-files:
@@ -67,3 +71,4 @@ jobs:
           target: ${{ matrix.arch }}-${{ matrix.platform }}
           include: LICENSE,README.md
           leading-dir: true
+          ref: ${{ inputs.ref }}
