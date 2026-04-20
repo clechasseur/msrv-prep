@@ -79,7 +79,7 @@ jobs:
         if: ${{ matrix.link-self-contained }}
 
       - name: Build binaries and upload to GitHub release
-        uses: taiki-e/upload-rust-binary-action@v1.30.0
+        uses: taiki-e/upload-rust-binary-action@v1.30.2
         with:
           bin: cargo-msrv-prep,cargo-msrv-unprep
           token: ${{ secrets.GITHUB_TOKEN }}
