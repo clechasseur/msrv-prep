@@ -38,8 +38,8 @@ clap = { version = "4.6.1", features = ["cargo", "derive"] }
 # to propose a change to clap-cargo to lift that restriction.
 clap-cargo = { version = "^0.13.0", features = ["cargo_metadata"] }
 clap-verbosity-flag = "3.0.4"
-env_logger = "0.11.10"
-log = "0.4.29"
+env_logger = "0.11.11"
+log = "0.4.33"
 mockall_double = "0.3.1"
 thiserror = "2.0.18"
 toml_edit = "0.25.12"
@@ -51,5 +51,5 @@ assert_matches = "1.5.0"
 indoc = "2.0.7"
 mockall = "0.14.0"
 predicates = "3.1.4"
-test-log = "0.2.20"
+test-log = "0.2.21"
 toml = "1.1.2"
