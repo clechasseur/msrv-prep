@@ -141,7 +141,7 @@ dependencies = [
  "assert_cmd",
  "assert_fs",
  "assert_matches",
- "cargo_metadata",
+ "cargo_metadata 0.18.1",
  "clap",
  "clap-cargo",
  "clap-verbosity-flag",
@@ -167,17 +167,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "cargo-platform"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dd0061da739915fae12ea00e16397555ed4371a6bb285431aab930f61b0aa4ba"
+dependencies = [
+ "serde",
+ "serde_core",
+]
+
+[[package]]
 name = "cargo_metadata"
 version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d886547e41f740c616ae73108f6eb70afe6d940c7bc697cb30f13daec073037"
 dependencies = [
  "camino",
- "cargo-platform",
+ "cargo-platform 0.1.9",
  "semver",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
+]
+
+[[package]]
+name = "cargo_metadata"
+version = "0.23.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef987d17b0a113becdd19d3d0022d04d7ef41f9efe4f3fb63ac44ba61df3ade9"
+dependencies = [
+ "camino",
+ "cargo-platform 0.3.3",
+ "semver",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
 ]
 
 [[package]]
@@ -198,13 +222,15 @@ dependencies = [
 
 [[package]]
 name = "clap-cargo"
-version = "0.13.0"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38ae55615695e768a76899c8411b4ebacfbe525e964f94fd24f0007b10b45cd3"
+checksum = "ac0fb996b5acdd543c8b8ff723c719715d437fdce607ac1fda01c977f568020d"
 dependencies = [
  "anstyle",
- "cargo_metadata",
+ "cargo_metadata 0.23.1",
  "clap",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
